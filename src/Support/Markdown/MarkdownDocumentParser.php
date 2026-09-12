@@ -1,0 +1,25 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Foxws\Docs\Support\Markdown;
+
+use League\CommonMark\CommonMarkConverter;
+use Spatie\YamlFrontMatter\YamlFrontMatter;
+
+final class MarkdownDocumentParser
+{
+    public function __construct(
+        private readonly CommonMarkConverter $converter = new CommonMarkConverter,
+    ) {}
+
+    public function parse(string $raw): ParsedDocument
+    {
+        $document = YamlFrontMatter::parse($raw);
+
+        return new ParsedDocument(
+            frontMatter: $document->matter(),
+            html: $this->converter->convert($document->body())->getContent(),
+        );
+    }
+}
