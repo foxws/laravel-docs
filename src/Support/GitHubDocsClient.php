@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Foxws\Docs\Support;
 
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -20,7 +21,7 @@ final class GitHubDocsClient
     {
         return Http::when(
             config('docs.github.token'),
-            fn ($http, string $token) => $http->withToken($token),
+            fn (PendingRequest $http, string $token) => $http->withToken($token),
         )
             ->get("https://api.github.com/repos/{$repository}/git/trees/{$branch}", [
                 'recursive' => 1,

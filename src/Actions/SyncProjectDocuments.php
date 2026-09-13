@@ -43,7 +43,7 @@ final class SyncProjectDocuments
     /**
      * @param  Collection<int, string>  $remotePaths
      */
-    private function pruneMissing(Project $project, $remotePaths): void
+    private function pruneMissing(Project $project, Collection $remotePaths): void
     {
         if (! config('docs.sync.prune_missing')) {
             return;
@@ -61,7 +61,7 @@ final class SyncProjectDocuments
     /**
      * @param  Collection<int, array{path: string, sha: string}>  $entries
      */
-    private function upsertChanged(Project $project, $entries): void
+    private function upsertChanged(Project $project, Collection $entries): void
     {
         foreach ($entries as $entry) {
             $existing = $project->documents()->firstWhere('source_path', $entry['path']);
