@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 
 /**
@@ -68,7 +69,7 @@ class Project extends Model
         // Pinned foreign key: hasMany()'s default guess derives from the
         // calling model's own class name, which would break as soon as a
         // consumer's subclass (e.g. AcmeProject) calls this method.
-        return $this->hasMany(Document::getDocumentClassName(), 'project_id');
+        return $this->hasMany(Document::modelClass(), 'project_id');
     }
 
     protected static function newFactory(): ProjectFactory
@@ -79,8 +80,34 @@ class Project extends Model
     /**
      * @return class-string<Project>
      */
-    public static function getProjectClassName(): string
+    public static function modelClass(): string
     {
         return config('docs.models.project', static::class);
+    }
+
+    /**
+     * Find a project by slug, creating it with the given attributes if it
+     * doesn't exist yet.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public static function findOrCreate(string $slug, array $attributes = []): static
+    {
+        return static::query()->firstOrCreate(['slug' => $slug], $attributes);
+    }
+
+    /**
+     * Sync this project's registration fields (title, repository,
+     * docs path, branch, seo). Never touches sync bookkeeping columns
+     * (last_synced_at/last_synced_sha) — those are only written after a
+     * successful sync.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function updateRegistration(array $attributes): static
+    {
+        $this->update(Arr::only($attributes, ['title', 'github_repository', 'docs_path', 'branch', 'seo']));
+
+        return $this;
     }
 }

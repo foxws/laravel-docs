@@ -73,7 +73,7 @@ class Document extends Model
      */
     public function project(): BelongsTo
     {
-        return $this->belongsTo(Project::getProjectClassName());
+        return $this->belongsTo(Project::modelClass());
     }
 
     /**
@@ -128,7 +128,7 @@ class Document extends Model
     /**
      * @return class-string<Document>
      */
-    public static function getDocumentClassName(): string
+    public static function modelClass(): string
     {
         return config('docs.models.document', static::class);
     }

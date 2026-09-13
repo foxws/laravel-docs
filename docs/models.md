@@ -13,6 +13,15 @@
 
 `Project::documents()` — `HasMany<Document>`.
 
+`Project::findOrCreate(string $slug, array $attributes = [])` — finds by
+slug, or creates with the given attributes if it doesn't exist yet.
+
+`$project->updateRegistration(array $attributes)` — syncs the registration
+fields (`title`, `github_repository`, `docs_path`, `branch`, `seo`) on an
+existing project; other keys are ignored, and sync bookkeeping is never
+touched. `docs:projects:add` calls both in sequence, so re-running it always
+finds-or-creates then re-syncs the fields.
+
 ## `Document`
 
 `Foxws\Docs\Models\Document`
@@ -51,8 +60,8 @@ class Project extends \Foxws\Docs\Models\Project
 ```
 
 Everywhere the package resolves `Project`/`Document` internally — relations,
-`docs:projects:add`, `docs:sync` — it goes through `Project::getProjectClassName()`
-/ `Document::getDocumentClassName()` rather than the hardcoded base class, so
+`docs:projects:add`, `docs:sync` — it goes through `Project::modelClass()`
+/ `Document::modelClass()` rather than the hardcoded base class, so
 your subclass is used consistently. Both base models pin their `$table` and
 the `documents` relation's foreign key explicitly, so a subclass with a
 different class name still resolves to the `projects`/`documents` tables and

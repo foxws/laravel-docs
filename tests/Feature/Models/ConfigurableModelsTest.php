@@ -10,23 +10,23 @@ class TestProject extends Project {}
 class TestDocument extends Document {}
 
 it('resolves the base project class by default', function () {
-    expect(Project::getProjectClassName())->toBe(Project::class);
+    expect(Project::modelClass())->toBe(Project::class);
 });
 
 it('resolves the base document class by default', function () {
-    expect(Document::getDocumentClassName())->toBe(Document::class);
+    expect(Document::modelClass())->toBe(Document::class);
 });
 
 it('resolves a configured project class', function () {
     config()->set('docs.models.project', TestProject::class);
 
-    expect(Project::getProjectClassName())->toBe(TestProject::class);
+    expect(Project::modelClass())->toBe(TestProject::class);
 });
 
 it('resolves a configured document class', function () {
     config()->set('docs.models.document', TestDocument::class);
 
-    expect(Document::getDocumentClassName())->toBe(TestDocument::class);
+    expect(Document::modelClass())->toBe(TestDocument::class);
 });
 
 it("uses the configured project class for the document's project relation", function () {
