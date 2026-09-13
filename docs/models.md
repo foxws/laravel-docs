@@ -22,6 +22,9 @@ existing project; other keys are ignored, and sync bookkeeping is never
 touched. `docs:projects:add` calls both in sequence, so re-running it always
 finds-or-creates then re-syncs the fields.
 
+`Project::eachRegistered(callable $callback)` — iterates every registered
+project, using the configured model class. Used by `docs:sync`.
+
 ## `Document`
 
 `Foxws\Docs\Models\Document`
@@ -33,6 +36,9 @@ finds-or-creates then re-syncs the fields.
 | `source_path`, `blob_sha` | Identify the file in the source repo and detect changes between syncs. |
 | `searchable` | Per-document opt-out of Scout indexing, set via front matter. |
 | `seo` | Array cast; per-document override. |
+
+`Document::syncSearchIndex()` — re-indexes all searchable documents, if
+`docs.search.enabled` is true. Used by `docs:sync`.
 
 ## Customizing the models
 

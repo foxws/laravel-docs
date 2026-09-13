@@ -103,4 +103,16 @@ class Project extends Model
 
         return $this;
     }
+
+    /**
+     * Iterate every registered project.
+     *
+     * @param  callable(Project): void  $callback
+     */
+    public static function eachRegistered(callable $callback): void
+    {
+        $modelClass = static::modelClass();
+
+        $modelClass::query()->each($callback);
+    }
 }

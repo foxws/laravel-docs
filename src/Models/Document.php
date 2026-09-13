@@ -128,4 +128,18 @@ class Document extends Model
     {
         return config('docs.models.document', static::class);
     }
+
+    /**
+     * Re-index all searchable documents, if search is enabled.
+     */
+    public static function syncSearchIndex(): void
+    {
+        if (! config('docs.search.enabled')) {
+            return;
+        }
+
+        $modelClass = static::modelClass();
+
+        $modelClass::makeAllSearchable();
+    }
 }

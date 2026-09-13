@@ -56,3 +56,14 @@ it('ignores attributes outside the registration fields', function () {
 
     expect($project->last_synced_sha)->toBe('previous-sha');
 });
+
+it('iterates every registered project', function () {
+    Project::factory()->count(3)->create();
+
+    $slugs = [];
+    Project::eachRegistered(function (Project $project) use (&$slugs) {
+        $slugs[] = $project->slug;
+    });
+
+    expect($slugs)->toHaveCount(3);
+});

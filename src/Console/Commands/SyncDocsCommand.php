@@ -17,19 +17,11 @@ class SyncDocsCommand extends Command
 
     public function handle(SyncProjectDocuments $syncDocuments): int
     {
-        $projectClass = Project::modelClass();
-
-        $projectClass::query()->each(function (Project $project) use ($syncDocuments) {
-            $this->components->task($project->slug, function () use ($syncDocuments, $project) {
-                $syncDocuments->handle($project);
-            });
+        Project::eachRegistered(function (Project $project) use ($syncDocuments) {
+            $this->components->task($project->slug, fn () => $syncDocuments->handle($project));
         });
 
-        if (config('docs.search.enabled')) {
-            $documentClass = Document::modelClass();
-
-            $documentClass::makeAllSearchable();
-        }
+        Document::syncSearchIndex();
 
         return self::SUCCESS;
     }
