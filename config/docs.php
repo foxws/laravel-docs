@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 use Foxws\Docs\Models\Document;
 use Foxws\Docs\Models\Project;
 
