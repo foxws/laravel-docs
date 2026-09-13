@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Foxws\Docs\Foundation\Console\Commands;
+namespace Foxws\Docs\Console\Commands;
 
-use Foxws\Docs\Domain\Projects\Models\Project;
+use Foxws\Docs\Models\Project;
 use Illuminate\Console\Command;
 
 class AddProjectCommand extends Command

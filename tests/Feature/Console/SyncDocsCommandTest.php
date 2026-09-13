@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Foxws\Docs\Domain\Documents\Models\Document;
-use Foxws\Docs\Domain\Projects\Models\Project;
+use Foxws\Docs\Models\Document;
+use Foxws\Docs\Models\Project;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 

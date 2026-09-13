@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Foxws\Docs\Support\GitHub;
+namespace Foxws\Docs\Support;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;

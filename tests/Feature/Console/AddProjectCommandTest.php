@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Foxws\Docs\Domain\Projects\Models\Project;
+use Foxws\Docs\Models\Project;
 
 it('registers a new project', function () {
     $this->artisan('docs:projects:add', [

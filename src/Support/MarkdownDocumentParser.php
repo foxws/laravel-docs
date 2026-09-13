@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Foxws\Docs\Support\Markdown;
+namespace Foxws\Docs\Support;
 
 use League\CommonMark\CommonMarkConverter;
 use Spatie\YamlFrontMatter\YamlFrontMatter;

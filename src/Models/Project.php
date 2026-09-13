@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Foxws\Docs\Domain\Projects\Models;
+namespace Foxws\Docs\Models;
 
 use Foxws\Docs\Database\Factories\ProjectFactory;
-use Foxws\Docs\Domain\Documents\Models\Document;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

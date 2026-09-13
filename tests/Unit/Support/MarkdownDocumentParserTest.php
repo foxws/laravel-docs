@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Foxws\Docs\Support\Markdown\MarkdownDocumentParser;
+use Foxws\Docs\Support\MarkdownDocumentParser;
 
 it('extracts front matter and renders the markdown body to html', function () {
     $raw = <<<'MD'

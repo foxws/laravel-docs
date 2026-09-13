@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Foxws\Docs\Domain\Documents\Models\Document;
+use Foxws\Docs\Models\Document;
 
 it('is searchable when search is enabled and the searchable flag is true', function () {
     config()->set('docs.search.enabled', true);

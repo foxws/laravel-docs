@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Foxws\Docs\Domain\Projects\Actions;
+namespace Foxws\Docs\Actions;
 
-use Foxws\Docs\Domain\Documents\Models\Document;
-use Foxws\Docs\Domain\Projects\Models\Project;
-use Foxws\Docs\Support\GitHub\GitHubDocsClient;
-use Foxws\Docs\Support\Markdown\MarkdownDocumentParser;
+use Foxws\Docs\Models\Document;
+use Foxws\Docs\Models\Project;
+use Foxws\Docs\Support\GitHubDocsClient;
+use Foxws\Docs\Support\MarkdownDocumentParser;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 

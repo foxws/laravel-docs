@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Foxws\Docs\Tests;
 
-use Foxws\Docs\Foundation\DocsServiceProvider;
+use Foxws\Docs\DocsServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\TestCase as Orchestra;
 

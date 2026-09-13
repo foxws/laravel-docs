@@ -72,7 +72,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Foxws\\Docs\\Foundation\\DocsServiceProvider"
+                "Foxws\\Docs\\DocsServiceProvider"
             ]
         }
     },

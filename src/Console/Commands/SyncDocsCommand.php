@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Foxws\Docs\Foundation\Console\Commands;
+namespace Foxws\Docs\Console\Commands;
 
-use Foxws\Docs\Domain\Documents\Models\Document;
-use Foxws\Docs\Domain\Projects\Actions\SyncProjectDocuments;
-use Foxws\Docs\Domain\Projects\Models\Project;
+use Foxws\Docs\Actions\SyncProjectDocuments;
+use Foxws\Docs\Models\Document;
+use Foxws\Docs\Models\Project;
 use Illuminate\Console\Command;
 
 class SyncDocsCommand extends Command
