@@ -14,7 +14,7 @@ use Laravel\Scout\Searchable;
 
 /**
  * @property int $id
- * @property int $project_id
+ * @property int $version_id
  * @property string $slug
  * @property string $title
  * @property string $body
@@ -26,7 +26,7 @@ use Laravel\Scout\Searchable;
  * @property array<string, mixed>|null $seo
  * @property Carbon $created_at
  * @property Carbon $updated_at
- * @property Project $project
+ * @property Version $version
  */
 class Document extends Model
 {
@@ -40,7 +40,7 @@ class Document extends Model
 
     /** @var list<string> */
     protected $fillable = [
-        'project_id',
+        'version_id',
         'slug',
         'title',
         'body',
@@ -65,11 +65,11 @@ class Document extends Model
     }
 
     /**
-     * @return BelongsTo<Project, $this>
+     * @return BelongsTo<Version, $this>
      */
-    public function project(): BelongsTo
+    public function version(): BelongsTo
     {
-        return $this->belongsTo(Project::modelClass());
+        return $this->belongsTo(Version::modelClass());
     }
 
     /**
@@ -82,7 +82,7 @@ class Document extends Model
             return $title;
         }
 
-        if ($pattern = $this->project->seo['title_pattern'] ?? null) {
+        if ($pattern = $this->version->project->seo['title_pattern'] ?? null) {
             return sprintf($pattern, $this->title);
         }
 
@@ -111,7 +111,8 @@ class Document extends Model
         return [
             'title' => $this->title,
             'body' => Str::of($this->body)->stripTags()->squish()->toString(),
-            'project' => $this->project->slug,
+            'project' => $this->version->project->slug,
+            'version' => $this->version->name,
             'section' => $this->section,
         ];
     }

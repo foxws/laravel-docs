@@ -44,10 +44,11 @@ php artisan migrate
 
 ## Usage
 
-Register a project, then sync its documentation from GitHub:
+Register a project and at least one version, then sync its documentation from GitHub:
 
 ```bash
 php artisan docs:projects:add laravel-podman "Laravel Podman" foxws/laravel-podman
+php artisan docs:versions:add laravel-podman 2.0.0 v2.0.0 --default
 php artisan docs:sync
 ```
 
@@ -55,12 +56,13 @@ php artisan docs:sync
 use Foxws\Docs\Models\Project;
 
 $project = Project::where('slug', 'laravel-podman')->firstOrFail();
-$document = $project->documents()->where('slug', 'installation')->firstOrFail();
+$version = $project->versions()->where('is_default', true)->firstOrFail();
+$document = $version->documents()->where('slug', 'installation')->firstOrFail();
 
 $document->resolveSeoTitle(); // "Installation — Laravel Podman — Foxws"
 ```
 
-See the [documentation](docs/index.md) for configuration, registering projects, scheduling syncs, and search.
+See the [documentation](docs/index.md) for configuration, registering projects and versions, scheduling syncs, and search.
 
 ## Changelog
 

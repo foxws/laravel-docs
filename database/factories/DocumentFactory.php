@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Foxws\Docs\Database\Factories;
 
 use Foxws\Docs\Models\Document;
-use Foxws\Docs\Models\Project;
+use Foxws\Docs\Models\Version;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -23,7 +23,7 @@ class DocumentFactory extends Factory
         $slug = $this->faker->unique()->slug(2);
 
         return [
-            'project_id' => Project::factory(),
+            'version_id' => Version::factory(),
             'slug' => $slug,
             'title' => ucwords(str_replace('-', ' ', $slug)),
             'body' => '<p>'.$this->faker->paragraph().'</p>',

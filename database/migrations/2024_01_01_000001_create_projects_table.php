@@ -16,10 +16,7 @@ return new class extends Migration
             $table->string('title');
             $table->string('github_repository');
             $table->string('docs_path')->default('docs');
-            $table->string('branch')->default('main');
             $table->json('seo')->nullable();
-            $table->timestamp('last_synced_at')->nullable();
-            $table->string('last_synced_sha')->nullable();
             $table->timestamps();
         });
     }

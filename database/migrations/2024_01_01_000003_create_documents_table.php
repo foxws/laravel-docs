@@ -12,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('version_id')->constrained()->cascadeOnDelete();
             $table->string('slug');
             $table->string('title');
             $table->longText('body');
@@ -24,8 +24,8 @@ return new class extends Migration
             $table->json('seo')->nullable();
             $table->timestamps();
 
-            $table->unique(['project_id', 'slug']);
-            $table->unique(['project_id', 'source_path']);
+            $table->unique(['version_id', 'slug']);
+            $table->unique(['version_id', 'source_path']);
         });
     }
 

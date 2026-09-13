@@ -14,11 +14,10 @@ class AddProjectCommand extends Command
         {title : Display title, e.g. "Laravel Podman"}
         {github_repository : "owner/repo", e.g. "foxws/laravel-podman"}
         {--docs-path=docs : Path to the docs folder within the repository}
-        {--branch=main : Branch to sync from}
         {--seo-title-pattern= : sprintf-style title pattern, e.g. "%s — Laravel Podman — Foxws"}
         {--seo-description= : Fallback SEO description for this project\'s documents}';
 
-    protected $description = 'Register a project (or update an existing one, matched by slug) for docs:sync to pull.';
+    protected $description = 'Register a project (or update an existing one, matched by slug). Register at least one version with docs:versions:add before syncing.';
 
     public function handle(): int
     {
@@ -31,14 +30,13 @@ class AddProjectCommand extends Command
             'title' => $this->argument('title'),
             'github_repository' => $this->argument('github_repository'),
             'docs_path' => $this->option('docs-path'),
-            'branch' => $this->option('branch'),
             'seo' => $seo === [] ? null : $seo,
         ];
 
         $project = Project::findOrCreate($this->argument('slug'), $attributes)
             ->updateRegistration($attributes);
 
-        $this->components->info("Registered project [{$project->slug}]. Run `docs:sync` to pull its documentation.");
+        $this->components->info("Registered project [{$project->slug}]. Register a version with `docs:versions:add` before syncing.");
 
         return self::SUCCESS;
     }

@@ -9,7 +9,7 @@ models this package provides.
 
 - [Installation](installation.md)
 - [Configuration](configuration.md)
-- [Registering projects](registering-projects.md)
+- [Registering projects and versions](registering-projects.md)
 - [Syncing](syncing.md)
 - [Models](models.md)
 - [Search](search.md)

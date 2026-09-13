@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 use Foxws\Docs\Models\Document;
 use Foxws\Docs\Models\Project;
+use Foxws\Docs\Models\Version;
 
 function makeDocumentForSeo(?array $documentSeo, ?array $projectSeo): Document
 {
     $project = Project::factory()->make(['seo' => $projectSeo]);
+
+    $version = Version::factory()->make();
+    $version->setRelation('project', $project);
+
     $document = Document::factory()->make(['title' => 'Installation', 'seo' => $documentSeo]);
-    $document->setRelation('project', $project);
+    $document->setRelation('version', $version);
 
     return $document;
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Foxws\Docs\Models\Document;
 use Foxws\Docs\Models\Project;
+use Foxws\Docs\Models\Version;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 
@@ -19,8 +20,15 @@ function fakeTreeResponse(array $entries, string $sha = 'root-tree-sha'): array
     ];
 }
 
+function fakeVersion(array $attributes = []): Version
+{
+    $project = Project::factory()->create(['slug' => 'example', 'github_repository' => 'foxws/example']);
+
+    return Version::factory()->create([...['project_id' => $project->id, 'ref' => 'main'], ...$attributes]);
+}
+
 it('creates new documents from a fresh project', function () {
-    Project::factory()->create(['slug' => 'example', 'github_repository' => 'foxws/example']);
+    fakeVersion();
 
     Http::fake([
         'api.github.com/repos/foxws/example/git/trees/main*' => Http::response(fakeTreeResponse([
@@ -35,9 +43,9 @@ it('creates new documents from a fresh project', function () {
 
     $this->assertDatabaseCount('documents', 2);
 
-    $project = Project::query()->where('slug', 'example')->firstOrFail();
-    expect($project->last_synced_at)->not->toBeNull();
-    expect($project->last_synced_sha)->toBe('root-tree-sha');
+    $version = Version::query()->firstOrFail();
+    expect($version->last_synced_at)->not->toBeNull();
+    expect($version->last_synced_sha)->toBe('root-tree-sha');
 
     $installation = Document::query()->where('source_path', 'docs/installation.md')->firstOrFail();
     expect($installation->title)->toBe('Installation');
@@ -46,8 +54,8 @@ it('creates new documents from a fresh project', function () {
 });
 
 it('updates a document when its blob sha changes', function () {
-    $project = Project::factory()->create(['slug' => 'example', 'github_repository' => 'foxws/example']);
-    $project->documents()->create([
+    $version = fakeVersion();
+    $version->documents()->create([
         'slug' => 'installation',
         'title' => 'Installation (old)',
         'body' => '<p>old</p>',
@@ -72,8 +80,8 @@ it('updates a document when its blob sha changes', function () {
 });
 
 it('skips fetching raw content when the blob sha is unchanged', function () {
-    $project = Project::factory()->create(['slug' => 'example', 'github_repository' => 'foxws/example']);
-    $project->documents()->create([
+    $version = fakeVersion();
+    $version->documents()->create([
         'slug' => 'usage',
         'title' => 'Usage',
         'body' => '<p>unchanged</p>',
@@ -94,8 +102,8 @@ it('skips fetching raw content when the blob sha is unchanged', function () {
 });
 
 it('prunes documents whose source path is no longer present remotely', function () {
-    $project = Project::factory()->create(['slug' => 'example', 'github_repository' => 'foxws/example']);
-    $project->documents()->create([
+    $version = fakeVersion();
+    $version->documents()->create([
         'slug' => 'removed',
         'title' => 'Removed',
         'body' => '<p>gone</p>',
@@ -115,8 +123,8 @@ it('prunes documents whose source path is no longer present remotely', function 
 it('does not prune when prune_missing is disabled', function () {
     config()->set('docs.sync.prune_missing', false);
 
-    $project = Project::factory()->create(['slug' => 'example', 'github_repository' => 'foxws/example']);
-    $project->documents()->create([
+    $version = fakeVersion();
+    $version->documents()->create([
         'slug' => 'orphan',
         'title' => 'Orphan',
         'body' => '<p>still here</p>',
@@ -134,12 +142,7 @@ it('does not prune when prune_missing is disabled', function () {
 });
 
 it('does not update last_synced_at when the sync fails partway', function () {
-    $project = Project::factory()->create([
-        'slug' => 'example',
-        'github_repository' => 'foxws/example',
-        'last_synced_at' => null,
-        'last_synced_sha' => null,
-    ]);
+    $version = fakeVersion(['last_synced_at' => null, 'last_synced_sha' => null]);
 
     Http::fake([
         'api.github.com/repos/foxws/example/git/trees/main*' => Http::response(fakeTreeResponse([
@@ -151,10 +154,10 @@ it('does not update last_synced_at when the sync fails partway', function () {
     try {
         $this->artisan('docs:sync')->run();
     } catch (RequestException) {
-        // v1 behavior: an uncaught exception on one project aborts the whole command.
+        // v1 behavior: an uncaught exception on one version aborts the whole command.
     }
 
-    $project->refresh();
-    expect($project->last_synced_at)->toBeNull();
-    expect($project->last_synced_sha)->toBeNull();
+    $version->refresh();
+    expect($version->last_synced_at)->toBeNull();
+    expect($version->last_synced_sha)->toBeNull();
 });

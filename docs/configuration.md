@@ -2,12 +2,14 @@
 
 `config/docs.php`:
 
-Projects are registered via the `docs:projects:add` command, not config —
-see [registering-projects.md](registering-projects.md).
+Projects and versions are registered via the `docs:projects:add` /
+`docs:versions:add` commands, not config — see
+[registering-projects.md](registering-projects.md).
 
 | Key | Description |
 | --- | --- |
 | `models.project` | The `Project` model class to use. Override to your own subclass — see [models.md](models.md#customizing-the-models). |
+| `models.version` | The `Version` model class to use. Override to your own subclass — see [models.md](models.md#customizing-the-models). |
 | `models.document` | The `Document` model class to use. Override to your own subclass — see [models.md](models.md#customizing-the-models). |
 | `seo.title_pattern` | Package-wide `sprintf`-style fallback for `Document::resolveSeoTitle()`, e.g. `'%s — Foxws'`. |
 | `seo.description` | Package-wide fallback SEO description. |

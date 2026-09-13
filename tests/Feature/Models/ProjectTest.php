@@ -9,7 +9,6 @@ it('creates a project when none exists for the slug', function () {
         'title' => 'Laravel Podman',
         'github_repository' => 'foxws/laravel-podman',
         'docs_path' => 'docs',
-        'branch' => 'main',
     ]);
 
     expect($project->slug)->toBe('laravel-podman')
@@ -29,32 +28,25 @@ it('returns the existing project without changing it when found', function () {
     $this->assertDatabaseCount('projects', 1);
 });
 
-it('updates registration fields without touching sync bookkeeping', function () {
-    $project = Project::factory()->create([
-        'title' => 'Old Title',
-        'last_synced_at' => now()->subDay(),
-        'last_synced_sha' => 'previous-sha',
-    ]);
+it('updates registration fields', function () {
+    $project = Project::factory()->create(['title' => 'Old Title']);
 
     $project->updateRegistration([
         'title' => 'New Title',
         'github_repository' => 'foxws/laravel-podman',
         'docs_path' => 'docs',
-        'branch' => 'main',
         'seo' => null,
     ]);
 
-    expect($project->title)->toBe('New Title')
-        ->and($project->last_synced_sha)->toBe('previous-sha')
-        ->and($project->last_synced_at)->not->toBeNull();
+    expect($project->title)->toBe('New Title');
 });
 
 it('ignores attributes outside the registration fields', function () {
-    $project = Project::factory()->create(['last_synced_sha' => 'previous-sha']);
+    $project = Project::factory()->create(['slug' => 'original-slug']);
 
-    $project->updateRegistration(['last_synced_sha' => 'should-not-apply']);
+    $project->updateRegistration(['slug' => 'changed-slug']);
 
-    expect($project->last_synced_sha)->toBe('previous-sha');
+    expect($project->slug)->toBe('original-slug');
 });
 
 it('iterates every registered project', function () {
