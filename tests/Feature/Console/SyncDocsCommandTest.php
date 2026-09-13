@@ -19,20 +19,9 @@ function fakeTreeResponse(array $entries, string $sha = 'root-tree-sha'): array
     ];
 }
 
-beforeEach(function () {
-    config()->set('docs.projects', [
-        [
-            'slug' => 'example',
-            'title' => 'Example',
-            'github_repository' => 'foxws/example',
-            'docs_path' => 'docs',
-            'branch' => 'main',
-            'seo' => null,
-        ],
-    ]);
-});
-
 it('creates new documents from a fresh project', function () {
+    Project::factory()->create(['slug' => 'example', 'github_repository' => 'foxws/example']);
+
     Http::fake([
         'api.github.com/repos/foxws/example/git/trees/main*' => Http::response(fakeTreeResponse([
             ['path' => 'docs/installation.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-a', 'size' => 512, 'url' => '...'],

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Foxws\Docs\Foundation;
 
+use Foxws\Docs\Foundation\Console\Commands\AddProjectCommand;
 use Foxws\Docs\Foundation\Console\Commands\SyncDocsCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -17,7 +18,7 @@ class DocsServiceProvider extends PackageServiceProvider
             ->hasConfigFile('docs')
             ->hasMigrations('create_projects_table', 'create_documents_table')
             ->runsMigrations()
-            ->hasCommands(SyncDocsCommand::class);
+            ->hasCommands(SyncDocsCommand::class, AddProjectCommand::class);
     }
 
     /**

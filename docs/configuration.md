@@ -2,9 +2,11 @@
 
 `config/docs.php`:
 
+Projects are registered via the `docs:projects:add` command, not config —
+see [registering-projects.md](registering-projects.md).
+
 | Key | Description |
 | --- | --- |
-| `projects` | The registry of packages whose docs get synced. See [registering-projects.md](registering-projects.md). |
 | `seo.title_pattern` | Package-wide `sprintf`-style fallback for `Document::resolveSeoTitle()`, e.g. `'%s — Foxws'`. |
 | `seo.description` | Package-wide fallback SEO description. |
 | `search.enabled` | Whether documents are indexed via Scout at all. Defaults to `env('DOCS_SEARCH_ENABLED', true)`. |

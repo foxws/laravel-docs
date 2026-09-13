@@ -4,7 +4,8 @@
 php artisan docs:sync
 ```
 
-For each registered project: fetches the repository's git tree, prunes
+For every registered project (every row in the `projects` table — see
+[registering-projects.md](registering-projects.md)): fetches the repository's git tree, prunes
 documents whose file no longer exists remotely (unless
 `docs.sync.prune_missing` is `false`), then fetches and upserts any file whose
 git blob SHA has changed since the last sync. Unchanged files are skipped

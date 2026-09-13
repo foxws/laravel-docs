@@ -27,10 +27,10 @@ Publish the config file:
 php artisan vendor:publish --tag="laravel-docs-config"
 ```
 
-Migrations run automatically. Register at least one project in
-`config/docs.php`, then sync:
+Migrations run automatically. Register at least one project, then sync:
 
 ```bash
+php artisan docs:projects:add laravel-podman "Laravel Podman" foxws/laravel-podman
 php artisan docs:sync
 ```
 
