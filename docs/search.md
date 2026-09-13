@@ -22,4 +22,5 @@ database calls will be made.
 
 `searchableAs()` returns `config('docs.search.index_prefix') . 'documents'`.
 `toSearchableArray()` indexes the title, plain-text body (markdown/HTML
-stripped once at sync time), the owning project's slug, and the section.
+stripped once at sync time), the owning project's slug, the version name,
+and the section.

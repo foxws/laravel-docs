@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 
@@ -18,12 +19,10 @@ use Illuminate\Support\Carbon;
  * @property string $title
  * @property string $github_repository
  * @property string $docs_path
- * @property string $branch
  * @property array<string, mixed>|null $seo
- * @property Carbon|null $last_synced_at
- * @property string|null $last_synced_sha
  * @property Carbon $created_at
  * @property Carbon $updated_at
+ * @property Collection<int, Version> $versions
  * @property Collection<int, Document> $documents
  */
 class Project extends Model
@@ -40,10 +39,7 @@ class Project extends Model
         'title',
         'github_repository',
         'docs_path',
-        'branch',
         'seo',
-        'last_synced_at',
-        'last_synced_sha',
     ];
 
     /**
@@ -53,17 +49,31 @@ class Project extends Model
     {
         return [
             'seo' => 'array',
-            'last_synced_at' => 'datetime',
         ];
     }
 
     /**
-     * @return HasMany<Document, $this>
+     * @return HasMany<Version, $this>
      */
-    public function documents(): HasMany
+    public function versions(): HasMany
     {
         // Pinned FK: hasMany() would otherwise guess it from the subclass's class name.
-        return $this->hasMany(Document::modelClass(), 'project_id');
+        return $this->hasMany(Version::modelClass(), 'project_id');
+    }
+
+    /**
+     * All documents across every version of this project.
+     *
+     * @return HasManyThrough<Document, Version, $this>
+     */
+    public function documents(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Document::modelClass(),
+            Version::modelClass(),
+            'project_id',
+            'version_id',
+        );
     }
 
     protected static function newFactory(): ProjectFactory
@@ -92,14 +102,13 @@ class Project extends Model
     }
 
     /**
-     * Sync the registration fields (title, repository, docs path, branch,
-     * seo). Leaves sync bookkeeping untouched.
+     * Sync the registration fields (title, repository, docs path, seo).
      *
      * @param  array<string, mixed>  $attributes
      */
     public function updateRegistration(array $attributes): static
     {
-        $this->update(Arr::only($attributes, ['title', 'github_repository', 'docs_path', 'branch', 'seo']));
+        $this->update(Arr::only($attributes, ['title', 'github_repository', 'docs_path', 'seo']));
 
         return $this;
     }

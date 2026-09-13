@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Foxws\Docs;
 
 use Foxws\Docs\Console\Commands\AddProjectCommand;
+use Foxws\Docs\Console\Commands\AddVersionCommand;
 use Foxws\Docs\Console\Commands\SyncDocsCommand;
 use Illuminate\Support\ServiceProvider;
 
@@ -40,6 +41,7 @@ class DocsServiceProvider extends ServiceProvider
         $this->commands([
             SyncDocsCommand::class,
             AddProjectCommand::class,
+            AddVersionCommand::class,
         ]);
     }
 }

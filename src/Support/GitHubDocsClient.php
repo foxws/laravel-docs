@@ -12,18 +12,19 @@ use Illuminate\Support\Str;
 final class GitHubDocsClient
 {
     /**
-     * Fetch the full recursive git tree for a repository/branch via the
-     * GitHub Trees API (authenticated, for the higher rate limit).
+     * Fetch the full recursive git tree for a repository at a ref (branch,
+     * tag, or SHA) via the GitHub Trees API (authenticated, for the higher
+     * rate limit).
      *
      * @return array{sha: string, tree: array<int, array{path: string, sha: string, type: string}>}
      */
-    public function fetchTree(string $repository, string $branch): array
+    public function fetchTree(string $repository, string $ref): array
     {
         return Http::when(
             config('docs.github.token'),
             fn (PendingRequest $http, string $token) => $http->withToken($token),
         )
-            ->get("https://api.github.com/repos/{$repository}/git/trees/{$branch}", [
+            ->get("https://api.github.com/repos/{$repository}/git/trees/{$ref}", [
                 'recursive' => 1,
             ])
             ->throw()
@@ -55,9 +56,9 @@ final class GitHubDocsClient
      * Fetch a file's raw content from the CDN-cached, unauthenticated
      * raw.githubusercontent.com endpoint (doesn't touch the API rate limit).
      */
-    public function fetchRawContent(string $repository, string $branch, string $path): string
+    public function fetchRawContent(string $repository, string $ref, string $path): string
     {
-        return Http::get("https://raw.githubusercontent.com/{$repository}/{$branch}/{$path}")
+        return Http::get("https://raw.githubusercontent.com/{$repository}/{$ref}/{$path}")
             ->throw()
             ->body();
     }

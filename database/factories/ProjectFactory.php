@@ -26,10 +26,7 @@ class ProjectFactory extends Factory
             'title' => ucwords(str_replace('-', ' ', $slug)),
             'github_repository' => "foxws/{$slug}",
             'docs_path' => 'docs',
-            'branch' => 'main',
             'seo' => null,
-            'last_synced_at' => null,
-            'last_synced_sha' => null,
         ];
     }
 }

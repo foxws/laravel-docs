@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Foxws\Docs\Models\Document;
 use Foxws\Docs\Models\Project;
+use Foxws\Docs\Models\Version;
 
 return [
 
@@ -14,6 +15,7 @@ return [
      */
     'models' => [
         'project' => Project::class,
+        'version' => Version::class,
         'document' => Document::class,
     ],
 

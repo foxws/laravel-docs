@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Foxws\Docs\Console\Commands;
 
-use Foxws\Docs\Actions\SyncProjectDocuments;
+use Foxws\Docs\Actions\SyncVersionDocuments;
 use Foxws\Docs\Models\Document;
 use Foxws\Docs\Models\Project;
+use Foxws\Docs\Models\Version;
 use Illuminate\Console\Command;
 
 class SyncDocsCommand extends Command
@@ -15,10 +16,15 @@ class SyncDocsCommand extends Command
 
     protected $description = 'Sync project documentation from GitHub.';
 
-    public function handle(SyncProjectDocuments $syncDocuments): int
+    public function handle(SyncVersionDocuments $syncVersionDocuments): int
     {
-        Project::eachRegistered(function (Project $project) use ($syncDocuments) {
-            $this->components->task($project->slug, fn () => $syncDocuments->handle($project));
+        Project::eachRegistered(function (Project $project) use ($syncVersionDocuments) {
+            $project->versions->each(function (Version $version) use ($project, $syncVersionDocuments) {
+                $this->components->task(
+                    "{$project->slug}@{$version->name}",
+                    fn () => $syncVersionDocuments->handle($version),
+                );
+            });
         });
 
         Document::syncSearchIndex();
