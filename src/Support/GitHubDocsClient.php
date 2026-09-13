@@ -62,4 +62,24 @@ final class GitHubDocsClient
             ->throw()
             ->body();
     }
+
+    /**
+     * Fetch the repository's latest non-prerelease GitHub release. Returns
+     * null if the repository has no releases.
+     *
+     * @return array{tag_name: string}|null
+     */
+    public function fetchLatestRelease(string $repository): ?array
+    {
+        $response = Http::when(
+            config('docs.github.token'),
+            fn (PendingRequest $http, string $token) => $http->withToken($token),
+        )->get("https://api.github.com/repos/{$repository}/releases/latest");
+
+        if ($response->notFound()) {
+            return null;
+        }
+
+        return $response->throw()->json();
+    }
 }

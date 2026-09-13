@@ -42,15 +42,13 @@ it('scopes findOrCreate to the given project', function () {
 it('updates registration fields without touching sync bookkeeping', function () {
     $version = Version::factory()->create([
         'ref' => 'v1.0.0',
-        'is_default' => false,
         'last_synced_at' => now()->subDay(),
         'last_synced_sha' => 'previous-sha',
     ]);
 
-    $version->updateRegistration(['ref' => 'v1.0.1', 'is_default' => true]);
+    $version->updateRegistration(['ref' => 'v1.0.1']);
 
     expect($version->ref)->toBe('v1.0.1')
-        ->and($version->is_default)->toBeTrue()
         ->and($version->last_synced_sha)->toBe('previous-sha')
         ->and($version->last_synced_at)->not->toBeNull();
 });
@@ -58,7 +56,31 @@ it('updates registration fields without touching sync bookkeeping', function () 
 it('ignores attributes outside the registration fields', function () {
     $version = Version::factory()->create(['name' => 'original-name']);
 
-    $version->updateRegistration(['name' => 'changed-name']);
+    $version->updateRegistration(['name' => 'changed-name', 'is_default' => true]);
 
-    expect($version->name)->toBe('original-name');
+    expect($version->name)->toBe('original-name')
+        ->and($version->is_default)->toBeFalse();
+});
+
+it('marks a version as default and unmarks the previous default', function () {
+    $project = Project::factory()->create();
+    $current = Version::factory()->create(['project_id' => $project->id, 'is_default' => true]);
+    $new = Version::factory()->create(['project_id' => $project->id, 'is_default' => false]);
+
+    $new->markAsDefault();
+
+    expect($new->refresh()->is_default)->toBeTrue()
+        ->and($current->refresh()->is_default)->toBeFalse();
+});
+
+it('does not affect another project\'s default when marking a version as default', function () {
+    $otherProject = Project::factory()->create();
+    $otherDefault = Version::factory()->create(['project_id' => $otherProject->id, 'is_default' => true]);
+
+    $project = Project::factory()->create();
+    $version = Version::factory()->create(['project_id' => $project->id, 'is_default' => false]);
+
+    $version->markAsDefault();
+
+    expect($otherDefault->refresh()->is_default)->toBeTrue();
 });

@@ -28,13 +28,14 @@ class AddVersionCommand extends Command
             return self::FAILURE;
         }
 
-        $attributes = [
-            'ref' => $this->argument('ref'),
-            'is_default' => $this->option('default'),
-        ];
+        $attributes = ['ref' => $this->argument('ref')];
 
         $version = Version::findOrCreate($project->id, $this->argument('name'), $attributes)
             ->updateRegistration($attributes);
+
+        if ($this->option('default')) {
+            $version->markAsDefault();
+        }
 
         $this->components->info("Registered version [{$project->slug}@{$version->name}]. Run `docs:sync` to pull its documentation.");
 

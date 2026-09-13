@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Foxws\Docs\Console\Commands;
 
+use Foxws\Docs\Actions\DiscoverLatestVersion;
+use Foxws\Docs\Actions\PruneOldVersions;
 use Foxws\Docs\Actions\SyncVersionDocuments;
 use Foxws\Docs\Models\Document;
 use Foxws\Docs\Models\Project;
@@ -16,9 +18,15 @@ class SyncDocsCommand extends Command
 
     protected $description = 'Sync project documentation from GitHub.';
 
-    public function handle(SyncVersionDocuments $syncVersionDocuments): int
-    {
-        Project::eachRegistered(function (Project $project) use ($syncVersionDocuments) {
+    public function handle(
+        SyncVersionDocuments $syncVersionDocuments,
+        DiscoverLatestVersion $discoverLatestVersion,
+        PruneOldVersions $pruneOldVersions,
+    ): int {
+        Project::eachRegistered(function (Project $project) use ($syncVersionDocuments, $discoverLatestVersion, $pruneOldVersions) {
+            $discoverLatestVersion->handle($project);
+            $pruneOldVersions->handle($project);
+
             $project->versions->each(function (Version $version) use ($project, $syncVersionDocuments) {
                 $this->components->task(
                     "{$project->slug}@{$version->name}",

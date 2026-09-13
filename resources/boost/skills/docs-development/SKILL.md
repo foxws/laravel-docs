@@ -37,13 +37,15 @@ php artisan docs:versions:add {slug} {name} {ref} --default
 
 A project alone has nothing to sync — it needs at least one version. Each version syncs independently from its own `ref` (a git tag or branch, e.g. `v2.0.0`), so a project can have several versions on different commits. Re-running either command with the same `slug`/`name` updates that row's static fields without touching sync bookkeeping (`last_synced_at`/`last_synced_sha`).
 
+You don't have to run `docs:versions:add` at all: with `docs.sync.auto_discover_versions` enabled (the default), `docs:sync` checks each project's latest GitHub release and registers/updates it as the default version automatically. A project with no versions ever registered will pick up its first one this way.
+
 ### 3. Sync documentation
 
 ```bash
 php artisan docs:sync
 ```
 
-Syncs every registered version of every registered project. Schedule it (e.g. `Schedule::command('docs:sync')->daily()` in `routes/console.php`) rather than relying on a webhook — there is none in v1.
+Syncs every registered version of every registered project. Before syncing, per project: auto-discovers the latest release as the default version (if enabled), then prunes old non-default versions beyond `docs.sync.keep_versions` (default `0` = keep everything; capped at `docs.sync.prune_chunk_size` per run; the default version is never pruned). Schedule it (e.g. `Schedule::command('docs:sync')->daily()` in `routes/console.php`) rather than relying on a webhook — there is none in v1.
 
 ### 4. Query and render
 
