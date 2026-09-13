@@ -7,6 +7,7 @@ namespace Foxws\Docs\Console\Commands;
 use Foxws\Docs\Models\Project;
 use Foxws\Docs\Models\Version;
 use Illuminate\Console\Command;
+use RuntimeException;
 
 class AddVersionCommand extends Command
 {
@@ -20,17 +21,18 @@ class AddVersionCommand extends Command
 
     public function handle(): int
     {
-        $project = Project::query()->where('slug', $this->argument('project'))->first();
+        $projectSlug = $this->stringArgument('project');
+        $project = Project::query()->where('slug', $projectSlug)->first();
 
         if (! $project) {
-            $this->components->error("No project registered with slug [{$this->argument('project')}]. Run `docs:projects:add` first.");
+            $this->components->error("No project registered with slug [{$projectSlug}]. Run `docs:projects:add` first.");
 
             return self::FAILURE;
         }
 
         $attributes = ['ref' => $this->argument('ref')];
 
-        $version = Version::findOrCreate($project->id, $this->argument('name'), $attributes)
+        $version = Version::findOrCreate($project->id, $this->stringArgument('name'), $attributes)
             ->updateRegistration($attributes);
 
         if ($this->option('default')) {
@@ -40,5 +42,16 @@ class AddVersionCommand extends Command
         $this->components->info("Registered version [{$project->slug}@{$version->name}]. Run `docs:sync` to pull its documentation.");
 
         return self::SUCCESS;
+    }
+
+    private function stringArgument(string $key): string
+    {
+        $value = $this->argument($key);
+
+        if (! is_string($value)) {
+            throw new RuntimeException("The [{$key}] argument must be a string.");
+        }
+
+        return $value;
     }
 }
