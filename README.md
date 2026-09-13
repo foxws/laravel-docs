@@ -24,7 +24,7 @@ composer require foxws/laravel-docs
 Publish the config file:
 
 ```bash
-php artisan vendor:publish --tag="laravel-docs-config"
+php artisan vendor:publish --tag="docs-config"
 ```
 
 Migrations run automatically. Register at least one project, then sync:
