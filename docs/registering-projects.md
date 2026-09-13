@@ -35,11 +35,55 @@ php artisan docs:versions:add laravel-podman 2.0.0 v2.0.0 --default
 | `--default` | off | Marks this version as the default one (e.g. for a docs UI's initial view). |
 
 The command matches on `name` within the project — running it again updates
-that version's `ref`/`is_default`. Each version syncs independently from its
+that version's `ref`. Passing `--default` marks it as the project's default,
+unmarking whichever version was default before (only one version per
+project can be default at a time). Omitting `--default` on a re-run leaves
+the current default unchanged. Each version syncs independently from its
 own `ref` and tracks its own `last_synced_at`/`last_synced_sha`.
 
 Once at least one version is registered, run `docs:sync` (see
 [syncing.md](syncing.md)) to pull documentation for every registered version.
+
+## Automatic version discovery
+
+You don't have to run `docs:versions:add` at all if you're happy always
+tracking whatever GitHub considers the latest release: with
+`docs.sync.auto_discover_versions` enabled (the default), `docs:sync` checks
+each project's `GET /repos/{owner}/{repo}/releases/latest` before syncing
+and registers that release as the default version automatically — creating
+it if it doesn't exist yet, or just updating its `ref` if it does. A project
+registered via `docs:projects:add` alone, with no `docs:versions:add` ever
+run, will pick up its first version this way on the next `docs:sync`.
+
+The version's `name` is derived from the release's tag via
+`docs.sync.version_name_pattern`, a regex (default `/\d.*/`, "keep from the
+first digit onward") — tag `v2.0.0`, `version-2.0.0`, and `2.0.0` all become
+name `2.0.0`, regardless of prefix convention. If the pattern doesn't match
+at all (e.g. a tag like `stable` with no digits), the raw tag is used as the
+name unchanged. Set it to `null` to always use the raw tag as-is, or to your
+own pattern if your tags follow a different convention. Repositories with no
+GitHub releases are skipped silently — nothing is registered for them until
+you either publish a release or register a version manually.
+
+Set `DOCS_AUTO_DISCOVER_VERSIONS=false` to turn this off and manage versions
+entirely through `docs:versions:add`.
+
+## Retention
+
+By default `docs:sync` keeps the 5 most recently created non-default
+versions per project (`docs.sync.keep_versions`) and deletes older ones,
+along with their documents. The default version is never pruned, regardless
+of its age, so the version a docs UI currently points to by default is
+always safe. Set `DOCS_KEEP_VERSIONS=0` to keep everything instead.
+
+`docs.sync.prune_chunk_size` (default `50`) caps how many versions get
+deleted in a single `docs:sync` run, in case a project has a large backlog
+of old versions to work through — it'll take a few runs to fully catch up
+rather than deleting hundreds of rows (and their documents) at once.
+
+This pairs naturally with automatic discovery — every new release becomes
+the default, and `keep_versions` cleans up versions that are no longer
+default without you having to do it by hand.
 
 ## Per-document front matter
 

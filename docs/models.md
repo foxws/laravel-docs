@@ -43,8 +43,12 @@ project, using the configured model class. Used by `docs:sync`.
 `Version::findOrCreate(int $projectId, string $name, array $attributes = [])`
 — finds by project + name, or creates with the given attributes.
 
-`$version->updateRegistration(array $attributes)` — syncs `ref`/`is_default`
-on an existing version; sync bookkeeping is never touched.
+`$version->updateRegistration(array $attributes)` — syncs `ref` on an
+existing version; sync bookkeeping is never touched.
+
+`$version->markAsDefault()` — marks this version as the project's default,
+unmarking whichever version was default before. This is the only way
+`is_default` changes; `updateRegistration()` doesn't touch it.
 
 ## `Document`
 

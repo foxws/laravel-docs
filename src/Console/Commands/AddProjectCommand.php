@@ -6,6 +6,7 @@ namespace Foxws\Docs\Console\Commands;
 
 use Foxws\Docs\Models\Project;
 use Illuminate\Console\Command;
+use RuntimeException;
 
 class AddProjectCommand extends Command
 {
@@ -33,11 +34,22 @@ class AddProjectCommand extends Command
             'seo' => $seo === [] ? null : $seo,
         ];
 
-        $project = Project::findOrCreate($this->argument('slug'), $attributes)
+        $project = Project::findOrCreate($this->stringArgument('slug'), $attributes)
             ->updateRegistration($attributes);
 
         $this->components->info("Registered project [{$project->slug}]. Register a version with `docs:versions:add` before syncing.");
 
         return self::SUCCESS;
+    }
+
+    private function stringArgument(string $key): string
+    {
+        $value = $this->argument($key);
+
+        if (! is_string($value)) {
+            throw new RuntimeException("The [{$key}] argument must be a string.");
+        }
+
+        return $value;
     }
 }

@@ -27,6 +27,13 @@ function fakeVersion(array $attributes = []): Version
     return Version::factory()->create([...['project_id' => $project->id, 'ref' => 'main'], ...$attributes]);
 }
 
+beforeEach(function () {
+    // These tests exercise SyncVersionDocuments, not version auto-discovery
+    // (see DiscoverLatestVersionTest) — fake "no releases" so docs:sync's
+    // discovery step no-ops instead of making a real GitHub API call.
+    Http::fake(['api.github.com/repos/*/releases/latest' => Http::response(null, 404)]);
+});
+
 it('creates new documents from a fresh project', function () {
     fakeVersion();
 

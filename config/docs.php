@@ -34,6 +34,36 @@ return [
 
     'sync' => [
         'prune_missing' => env('DOCS_PRUNE_MISSING', true),
+
+        /*
+         * When enabled, docs:sync checks each project's latest GitHub
+         * release before syncing and registers it as the default version
+         * automatically, if it isn't already registered.
+         */
+        'auto_discover_versions' => env('DOCS_AUTO_DISCOVER_VERSIONS', true),
+
+        /*
+         * When a version is auto-discovered, this regex derives its display
+         * name from the release tag — the first match wins (e.g. "v2.0.0"
+         * or "version-2.0.0" both become "2.0.0"). Set to null to use the
+         * raw tag as the name unchanged.
+         */
+        'version_name_pattern' => env('DOCS_VERSION_NAME_PATTERN', '/\d.*/'),
+
+        /*
+         * How many non-default versions to keep per project, most recently
+         * created first — older ones are deleted on the next docs:sync. The
+         * default version is never pruned, regardless of its age. Set to 0
+         * to keep everything.
+         */
+        'keep_versions' => env('DOCS_KEEP_VERSIONS', 5),
+
+        /*
+         * Maximum number of old versions to delete per docs:sync run, once
+         * keep_versions is exceeded. Caps how much a single run prunes if a
+         * project has accumulated a large backlog.
+         */
+        'prune_chunk_size' => env('DOCS_PRUNE_CHUNK_SIZE', 50),
     ],
 
     'github' => [

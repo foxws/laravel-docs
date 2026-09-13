@@ -101,14 +101,26 @@ class Version extends Model
     }
 
     /**
-     * Sync the registration fields (ref, is_default). Leaves sync
-     * bookkeeping untouched.
+     * Sync the registration fields (ref). Leaves sync bookkeeping and
+     * is_default untouched — use markAsDefault() to change that.
      *
      * @param  array<string, mixed>  $attributes
      */
     public function updateRegistration(array $attributes): static
     {
-        $this->update(Arr::only($attributes, ['ref', 'is_default']));
+        $this->update(Arr::only($attributes, ['ref']));
+
+        return $this;
+    }
+
+    /**
+     * Mark this version as the project's default, unmarking any other.
+     */
+    public function markAsDefault(): static
+    {
+        static::query()->where('project_id', $this->project_id)->update(['is_default' => false]);
+
+        $this->update(['is_default' => true]);
 
         return $this;
     }
