@@ -26,8 +26,7 @@ abstract class TestCase extends Orchestra
     {
         config()->set('database.default', 'testing');
 
-        // In-memory Scout engine: exercises shouldBeSearchable()/searchable()/
-        // unsearchable() for real, without hitting a network-backed driver.
+        // In-memory Scout engine, no network-backed driver needed for tests.
         config()->set('scout.driver', 'collection');
     }
 }

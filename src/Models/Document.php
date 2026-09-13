@@ -35,11 +35,7 @@ class Document extends Model
 
     use Searchable;
 
-    /**
-     * Pinned so a consumer's subclass (e.g. `App\Models\Document extends
-     * Foxws\Docs\Models\Document`) still resolves to this table instead of
-     * Eloquent guessing one from the subclass's own class name.
-     */
+    /** Pinned so a subclass still resolves to this table. */
     protected $table = 'documents';
 
     /** @var list<string> */

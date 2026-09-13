@@ -35,9 +35,7 @@ class AddProjectCommand extends Command
             'seo' => $seo === [] ? null : $seo,
         ];
 
-        $projectClass = Project::modelClass();
-
-        $project = $projectClass::findOrCreate($this->argument('slug'), $attributes)
+        $project = Project::findOrCreate($this->argument('slug'), $attributes)
             ->updateRegistration($attributes);
 
         $this->components->info("Registered project [{$project->slug}]. Run `docs:sync` to pull its documentation.");

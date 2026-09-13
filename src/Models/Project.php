@@ -31,11 +31,7 @@ class Project extends Model
     /** @use HasFactory<ProjectFactory> */
     use HasFactory;
 
-    /**
-     * Pinned so a consumer's subclass (e.g. `App\Models\Project extends
-     * Foxws\Docs\Models\Project`) still resolves to this table instead of
-     * Eloquent guessing one from the subclass's own class name.
-     */
+    /** Pinned so a subclass still resolves to this table. */
     protected $table = 'projects';
 
     /** @var list<string> */
@@ -66,9 +62,7 @@ class Project extends Model
      */
     public function documents(): HasMany
     {
-        // Pinned foreign key: hasMany()'s default guess derives from the
-        // calling model's own class name, which would break as soon as a
-        // consumer's subclass (e.g. AcmeProject) calls this method.
+        // Pinned FK: hasMany() would otherwise guess it from the subclass's class name.
         return $this->hasMany(Document::modelClass(), 'project_id');
     }
 
@@ -86,21 +80,20 @@ class Project extends Model
     }
 
     /**
-     * Find a project by slug, creating it with the given attributes if it
-     * doesn't exist yet.
+     * Find a project by slug, or create it with the given attributes.
      *
      * @param  array<string, mixed>  $attributes
      */
-    public static function findOrCreate(string $slug, array $attributes = []): static
+    public static function findOrCreate(string $slug, array $attributes = []): self
     {
-        return static::query()->firstOrCreate(['slug' => $slug], $attributes);
+        $modelClass = static::modelClass();
+
+        return $modelClass::query()->firstOrCreate(['slug' => $slug], $attributes);
     }
 
     /**
-     * Sync this project's registration fields (title, repository,
-     * docs path, branch, seo). Never touches sync bookkeeping columns
-     * (last_synced_at/last_synced_sha) — those are only written after a
-     * successful sync.
+     * Sync the registration fields (title, repository, docs path, branch,
+     * seo). Leaves sync bookkeeping untouched.
      *
      * @param  array<string, mixed>  $attributes
      */
