@@ -2,12 +2,12 @@
 
 ## `Project`
 
-`Foxws\Docs\Domain\Projects\Models\Project`
+`Foxws\Docs\Models\Project`
 
 | Field | Notes |
 | --- | --- |
 | `slug` | Unique, used for routing/lookup. |
-| `title`, `github_repository`, `docs_path`, `branch` | Static metadata, upserted from config on each sync. |
+| `title`, `github_repository`, `docs_path`, `branch` | Static metadata, set via `docs:projects:add`. |
 | `seo` | Array cast; optional `title_pattern`/`description` override. |
 | `last_synced_at`, `last_synced_sha` | Sync bookkeeping — only set after a successful sync. |
 
@@ -15,7 +15,7 @@
 
 ## `Document`
 
-`Foxws\Docs\Domain\Documents\Models\Document`
+`Foxws\Docs\Models\Document`
 
 | Field | Notes |
 | --- | --- |

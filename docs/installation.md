@@ -7,7 +7,7 @@ composer require foxws/laravel-docs
 Publish the config file:
 
 ```bash
-php artisan vendor:publish --tag="laravel-docs-config"
+php artisan vendor:publish --tag="docs-config"
 ```
 
 Migrations for the `projects` and `documents` tables run automatically — no
@@ -15,7 +15,7 @@ Migrations for the `projects` and `documents` tables run automatically — no
 (and customized) via:
 
 ```bash
-php artisan vendor:publish --tag="laravel-docs-migrations"
+php artisan vendor:publish --tag="docs-migrations"
 ```
 
 Once at least one project is registered (see

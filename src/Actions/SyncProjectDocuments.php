@@ -1,0 +1,92 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Foxws\Docs\Actions;
+
+use Foxws\Docs\Models\Document;
+use Foxws\Docs\Models\Project;
+use Foxws\Docs\Support\GitHubDocsClient;
+use Foxws\Docs\Support\MarkdownDocumentParser;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+
+final class SyncProjectDocuments
+{
+    public function __construct(
+        private readonly GitHubDocsClient $client,
+        private readonly MarkdownDocumentParser $parser,
+    ) {}
+
+    /**
+     * Sync a single project's documents from its GitHub repository.
+     *
+     * Order matters: prune stale documents before upserting changed/new
+     * ones (so a rename never briefly exists as two rows), and only mark
+     * the project as synced once the whole pass has succeeded (so a
+     * failure mid-sync leaves the previous, still-accurate sync state).
+     */
+    public function handle(Project $project): void
+    {
+        $tree = $this->client->fetchTree($project->github_repository, $project->branch);
+        $entries = $this->client->filterDocEntries($tree['tree'], $project->docs_path);
+
+        $this->pruneMissing($project, $entries->pluck('path'));
+        $this->upsertChanged($project, $entries);
+
+        $project->update([
+            'last_synced_at' => now(),
+            'last_synced_sha' => $tree['sha'],
+        ]);
+    }
+
+    /**
+     * @param  Collection<int, string>  $remotePaths
+     */
+    private function pruneMissing(Project $project, Collection $remotePaths): void
+    {
+        if (! config('docs.sync.prune_missing')) {
+            return;
+        }
+
+        $project->documents()
+            ->whereNotIn('source_path', $remotePaths)
+            ->get()
+            ->each(function (Document $document) {
+                $document->unsearchable();
+                $document->delete();
+            });
+    }
+
+    /**
+     * @param  Collection<int, array{path: string, sha: string}>  $entries
+     */
+    private function upsertChanged(Project $project, Collection $entries): void
+    {
+        foreach ($entries as $entry) {
+            $existing = $project->documents()->firstWhere('source_path', $entry['path']);
+
+            if ($existing?->blob_sha === $entry['sha']) {
+                continue;
+            }
+
+            $raw = $this->client->fetchRawContent($project->github_repository, $project->branch, $entry['path']);
+            $parsed = $this->parser->parse($raw);
+            $stem = Str::of($entry['path'])->afterLast('/')->beforeLast('.md');
+
+            $project->documents()->updateOrCreate(
+                ['source_path' => $entry['path']],
+                [
+                    'slug' => $parsed->frontMatter['slug'] ?? $stem->toString(),
+                    'title' => $parsed->frontMatter['title'] ?? $stem->headline()->toString(),
+                    'body' => $parsed->html,
+                    'order' => $parsed->frontMatter['order'] ?? 0,
+                    'section' => $parsed->frontMatter['section'] ?? null,
+                    'blob_sha' => $entry['sha'],
+                    'searchable' => $parsed->frontMatter['searchable'] ?? true,
+                    'seo' => $parsed->frontMatter['seo'] ?? null,
+                ],
+            );
+        }
+    }
+}
