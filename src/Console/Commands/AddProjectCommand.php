@@ -27,16 +27,16 @@ class AddProjectCommand extends Command
             'description' => $this->option('seo-description'),
         ]);
 
-        $project = Project::query()->updateOrCreate(
-            ['slug' => $this->argument('slug')],
-            [
-                'title' => $this->argument('title'),
-                'github_repository' => $this->argument('github_repository'),
-                'docs_path' => $this->option('docs-path'),
-                'branch' => $this->option('branch'),
-                'seo' => $seo === [] ? null : $seo,
-            ],
-        );
+        $attributes = [
+            'title' => $this->argument('title'),
+            'github_repository' => $this->argument('github_repository'),
+            'docs_path' => $this->option('docs-path'),
+            'branch' => $this->option('branch'),
+            'seo' => $seo === [] ? null : $seo,
+        ];
+
+        $project = Project::findOrCreate($this->argument('slug'), $attributes)
+            ->updateRegistration($attributes);
 
         $this->components->info("Registered project [{$project->slug}]. Run `docs:sync` to pull its documentation.");
 

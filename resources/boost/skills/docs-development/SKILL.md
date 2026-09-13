@@ -56,6 +56,10 @@ $document->resolveSeoTitle();
 
 `Document::body` is already-rendered HTML (from markdown). `Document` uses Scout's `Searchable` trait; indexing is gated by `config('docs.search.enabled')` and each document's `searchable` flag (set via front matter) — it stays fully inert with no configured Scout driver when search is disabled.
 
+### 5. Customize the models (optional)
+
+Set `config('docs.models.project')` / `config('docs.models.document')` to your own subclass to add app-specific behavior. Don't set a `$table` or override the `documents`/`project` relations' keys — the base models already pin those so a differently-named subclass still resolves to the right table/column.
+
 ## Rules, References, and Templates
 
 Read before executing:

@@ -35,6 +35,9 @@ class Document extends Model
 
     use Searchable;
 
+    /** Pinned so a subclass still resolves to this table. */
+    protected $table = 'documents';
+
     /** @var list<string> */
     protected $fillable = [
         'project_id',
@@ -66,7 +69,7 @@ class Document extends Model
      */
     public function project(): BelongsTo
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Project::modelClass());
     }
 
     /**
@@ -116,5 +119,27 @@ class Document extends Model
     protected static function newFactory(): DocumentFactory
     {
         return DocumentFactory::new();
+    }
+
+    /**
+     * @return class-string<Document>
+     */
+    public static function modelClass(): string
+    {
+        return config('docs.models.document', static::class);
+    }
+
+    /**
+     * Re-index all searchable documents, if search is enabled.
+     */
+    public static function syncSearchIndex(): void
+    {
+        if (! config('docs.search.enabled')) {
+            return;
+        }
+
+        $modelClass = static::modelClass();
+
+        $modelClass::makeAllSearchable();
     }
 }

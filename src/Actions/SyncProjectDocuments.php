@@ -19,12 +19,8 @@ final class SyncProjectDocuments
     ) {}
 
     /**
-     * Sync a single project's documents from its GitHub repository.
-     *
-     * Order matters: prune stale documents before upserting changed/new
-     * ones (so a rename never briefly exists as two rows), and only mark
-     * the project as synced once the whole pass has succeeded (so a
-     * failure mid-sync leaves the previous, still-accurate sync state).
+     * Prunes documents no longer in the remote tree, then upserts
+     * changed/new ones. Only marks the project synced if both succeed.
      */
     public function handle(Project $project): void
     {
