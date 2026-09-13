@@ -70,6 +70,65 @@ it('does nothing when auto-discovery is disabled', function () {
     Http::assertNothingSent();
 });
 
+it('derives the name from arbitrary prefixes via the default pattern', function () {
+    config()->set('docs.sync.auto_discover_versions', true);
+
+    $project = Project::factory()->create(['github_repository' => 'foxws/example']);
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/releases/latest' => Http::response(['tag_name' => 'version-2.0.0'], 200),
+    ]);
+
+    $version = app(DiscoverLatestVersion::class)->handle($project);
+
+    expect($version->name)->toBe('2.0.0')
+        ->and($version->ref)->toBe('version-2.0.0');
+});
+
+it('falls back to the raw tag when the pattern does not match', function () {
+    config()->set('docs.sync.auto_discover_versions', true);
+
+    $project = Project::factory()->create(['github_repository' => 'foxws/example']);
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/releases/latest' => Http::response(['tag_name' => 'stable'], 200),
+    ]);
+
+    $version = app(DiscoverLatestVersion::class)->handle($project);
+
+    expect($version->name)->toBe('stable');
+});
+
+it('uses the raw tag as-is when the pattern is null', function () {
+    config()->set('docs.sync.auto_discover_versions', true);
+    config()->set('docs.sync.version_name_pattern', null);
+
+    $project = Project::factory()->create(['github_repository' => 'foxws/example']);
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/releases/latest' => Http::response(['tag_name' => 'v2.0.0'], 200),
+    ]);
+
+    $version = app(DiscoverLatestVersion::class)->handle($project);
+
+    expect($version->name)->toBe('v2.0.0');
+});
+
+it('honors a custom version_name_pattern', function () {
+    config()->set('docs.sync.auto_discover_versions', true);
+    config()->set('docs.sync.version_name_pattern', '/\d+\.\d+/');
+
+    $project = Project::factory()->create(['github_repository' => 'foxws/example']);
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/releases/latest' => Http::response(['tag_name' => 'v2.0.0-beta'], 200),
+    ]);
+
+    $version = app(DiscoverLatestVersion::class)->handle($project);
+
+    expect($version->name)->toBe('2.0');
+});
+
 it('does nothing when the repository has no releases', function () {
     config()->set('docs.sync.auto_discover_versions', true);
 

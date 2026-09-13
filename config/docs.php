@@ -43,6 +43,14 @@ return [
         'auto_discover_versions' => env('DOCS_AUTO_DISCOVER_VERSIONS', true),
 
         /*
+         * When a version is auto-discovered, this regex derives its display
+         * name from the release tag — the first match wins (e.g. "v2.0.0"
+         * or "version-2.0.0" both become "2.0.0"). Set to null to use the
+         * raw tag as the name unchanged.
+         */
+        'version_name_pattern' => env('DOCS_VERSION_NAME_PATTERN', '/\d.*/'),
+
+        /*
          * How many non-default versions to keep per project, most recently
          * created first — older ones are deleted on the next docs:sync. The
          * default version is never pruned, regardless of its age. Set to 0

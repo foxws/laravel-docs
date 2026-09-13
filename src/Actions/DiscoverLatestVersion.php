@@ -31,11 +31,28 @@ final class DiscoverLatestVersion
         }
 
         $ref = $release['tag_name'];
-        $name = ltrim($ref, 'vV');
+        $name = $this->deriveVersionName($ref);
 
         $version = Version::findOrCreate($project->id, $name, ['ref' => $ref])
             ->updateRegistration(['ref' => $ref]);
 
         return $version->markAsDefault();
+    }
+
+    /**
+     * Derive a display name from a release tag using
+     * `docs.sync.version_name_pattern` — everything the pattern matches is
+     * kept. Falls back to the raw tag if the pattern doesn't match (e.g. a
+     * tag with no digits) or is set to null.
+     */
+    private function deriveVersionName(string $ref): string
+    {
+        $pattern = config('docs.sync.version_name_pattern');
+
+        if ($pattern && preg_match($pattern, $ref, $matches) === 1) {
+            return $matches[0];
+        }
+
+        return $ref;
     }
 }

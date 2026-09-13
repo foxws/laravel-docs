@@ -55,10 +55,15 @@ it if it doesn't exist yet, or just updating its `ref` if it does. A project
 registered via `docs:projects:add` alone, with no `docs:versions:add` ever
 run, will pick up its first version this way on the next `docs:sync`.
 
-The version's `name` is the release's tag with a leading `v` stripped (e.g.
-tag `v2.0.0` becomes name `2.0.0`; tag `2.0.0` stays `2.0.0`). Repositories
-with no GitHub releases are skipped silently — nothing is registered for
-them until you either publish a release or register a version manually.
+The version's `name` is derived from the release's tag via
+`docs.sync.version_name_pattern`, a regex (default `/\d.*/`, "keep from the
+first digit onward") — tag `v2.0.0`, `version-2.0.0`, and `2.0.0` all become
+name `2.0.0`, regardless of prefix convention. If the pattern doesn't match
+at all (e.g. a tag like `stable` with no digits), the raw tag is used as the
+name unchanged. Set it to `null` to always use the raw tag as-is, or to your
+own pattern if your tags follow a different convention. Repositories with no
+GitHub releases are skipped silently — nothing is registered for them until
+you either publish a release or register a version manually.
 
 Set `DOCS_AUTO_DISCOVER_VERSIONS=false` to turn this off and manage versions
 entirely through `docs:versions:add`.
