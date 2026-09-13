@@ -45,7 +45,7 @@ You don't have to run `docs:versions:add` at all: with `docs.sync.auto_discover_
 php artisan docs:sync
 ```
 
-Syncs every registered version of every registered project. Before syncing, per project: auto-discovers the latest release as the default version (if enabled), then prunes old non-default versions beyond `docs.sync.keep_versions` (default `0` = keep everything; capped at `docs.sync.prune_chunk_size` per run; the default version is never pruned). Schedule it (e.g. `Schedule::command('docs:sync')->daily()` in `routes/console.php`) rather than relying on a webhook — there is none in v1.
+Syncs every registered version of every registered project. Before syncing, per project: auto-discovers the latest release as the default version (if enabled), then prunes old non-default versions beyond `docs.sync.keep_versions` (default `5`; set to `0` to keep everything; capped at `docs.sync.prune_chunk_size` per run; the default version is never pruned). Schedule it (e.g. `Schedule::command('docs:sync')->daily()` in `routes/console.php`) rather than relying on a webhook — there is none in v1.
 
 ### 4. Query and render
 

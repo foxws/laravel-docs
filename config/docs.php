@@ -45,10 +45,10 @@ return [
         /*
          * How many non-default versions to keep per project, most recently
          * created first — older ones are deleted on the next docs:sync. The
-         * default version is never pruned, regardless of its age. 0 keeps
-         * everything.
+         * default version is never pruned, regardless of its age. Set to 0
+         * to keep everything.
          */
-        'keep_versions' => env('DOCS_KEEP_VERSIONS', 0),
+        'keep_versions' => env('DOCS_KEEP_VERSIONS', 5),
 
         /*
          * Maximum number of old versions to delete per docs:sync run, once

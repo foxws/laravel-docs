@@ -65,12 +65,11 @@ entirely through `docs:versions:add`.
 
 ## Retention
 
-By default every version you've ever registered is kept forever. Set
-`docs.sync.keep_versions` to prune old ones: `docs:sync` will delete
-non-default versions beyond that count (most recently created first),
+By default `docs:sync` keeps the 5 most recently created non-default
+versions per project (`docs.sync.keep_versions`) and deletes older ones,
 along with their documents. The default version is never pruned, regardless
 of its age, so the version a docs UI currently points to by default is
-always safe. `0` (the default) disables pruning entirely.
+always safe. Set `DOCS_KEEP_VERSIONS=0` to keep everything instead.
 
 `docs.sync.prune_chunk_size` (default `50`) caps how many versions get
 deleted in a single `docs:sync` run, in case a project has a large backlog
