@@ -25,6 +25,39 @@
 | `searchable` | Per-document opt-out of Scout indexing, set via front matter. |
 | `seo` | Array cast; per-document override. |
 
+## Customizing the models
+
+Override `config('docs.models.project')` / `config('docs.models.document')`
+with your own subclasses, e.g.:
+
+```php
+// config/docs.php
+'models' => [
+    'project' => App\Models\Project::class,
+    'document' => App\Models\Document::class,
+],
+```
+
+```php
+namespace App\Models;
+
+class Project extends \Foxws\Docs\Models\Project
+{
+    public function isFeatured(): bool
+    {
+        return in_array($this->slug, ['laravel-podman', 'laravel-docs']);
+    }
+}
+```
+
+Everywhere the package resolves `Project`/`Document` internally — relations,
+`docs:projects:add`, `docs:sync` — it goes through `Project::getProjectClassName()`
+/ `Document::getDocumentClassName()` rather than the hardcoded base class, so
+your subclass is used consistently. Both base models pin their `$table` and
+the `documents` relation's foreign key explicitly, so a subclass with a
+different class name still resolves to the `projects`/`documents` tables and
+the `project_id` column correctly.
+
 ## SEO title resolution
 
 `$document->resolveSeoTitle()` resolves in order, stopping at the first

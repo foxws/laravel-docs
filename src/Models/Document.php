@@ -35,6 +35,13 @@ class Document extends Model
 
     use Searchable;
 
+    /**
+     * Pinned so a consumer's subclass (e.g. `App\Models\Document extends
+     * Foxws\Docs\Models\Document`) still resolves to this table instead of
+     * Eloquent guessing one from the subclass's own class name.
+     */
+    protected $table = 'documents';
+
     /** @var list<string> */
     protected $fillable = [
         'project_id',
@@ -66,7 +73,7 @@ class Document extends Model
      */
     public function project(): BelongsTo
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Project::getProjectClassName());
     }
 
     /**
@@ -116,5 +123,13 @@ class Document extends Model
     protected static function newFactory(): DocumentFactory
     {
         return DocumentFactory::new();
+    }
+
+    /**
+     * @return class-string<Document>
+     */
+    public static function getDocumentClassName(): string
+    {
+        return config('docs.models.document', static::class);
     }
 }

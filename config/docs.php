@@ -1,8 +1,20 @@
 <?php
 
 declare(strict_types=1);
+use Foxws\Docs\Models\Document;
+use Foxws\Docs\Models\Project;
 
 return [
+
+    /*
+     * Override these to use your own models. Yours must extend the
+     * respective base model, e.g. `App\Models\Project extends
+     * Foxws\Docs\Models\Project`.
+     */
+    'models' => [
+        'project' => Project::class,
+        'document' => Document::class,
+    ],
 
     /*
      * Package-wide default SEO, used when a project/document doesn't override it.

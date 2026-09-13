@@ -30,6 +30,13 @@ class Project extends Model
     /** @use HasFactory<ProjectFactory> */
     use HasFactory;
 
+    /**
+     * Pinned so a consumer's subclass (e.g. `App\Models\Project extends
+     * Foxws\Docs\Models\Project`) still resolves to this table instead of
+     * Eloquent guessing one from the subclass's own class name.
+     */
+    protected $table = 'projects';
+
     /** @var list<string> */
     protected $fillable = [
         'slug',
@@ -58,11 +65,22 @@ class Project extends Model
      */
     public function documents(): HasMany
     {
-        return $this->hasMany(Document::class);
+        // Pinned foreign key: hasMany()'s default guess derives from the
+        // calling model's own class name, which would break as soon as a
+        // consumer's subclass (e.g. AcmeProject) calls this method.
+        return $this->hasMany(Document::getDocumentClassName(), 'project_id');
     }
 
     protected static function newFactory(): ProjectFactory
     {
         return ProjectFactory::new();
+    }
+
+    /**
+     * @return class-string<Project>
+     */
+    public static function getProjectClassName(): string
+    {
+        return config('docs.models.project', static::class);
     }
 }

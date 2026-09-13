@@ -27,7 +27,9 @@ class AddProjectCommand extends Command
             'description' => $this->option('seo-description'),
         ]);
 
-        $project = Project::query()->updateOrCreate(
+        $projectClass = Project::getProjectClassName();
+
+        $project = $projectClass::query()->updateOrCreate(
             ['slug' => $this->argument('slug')],
             [
                 'title' => $this->argument('title'),
