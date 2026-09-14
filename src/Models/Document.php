@@ -147,8 +147,12 @@ class Document extends Model implements Htmlable
     /**
      * Only real documents columns — the database engine executes its
      * LIKE/full-text queries directly against columns named here, so
-     * relation-derived values (e.g. the parent project/version) can't
-     * appear in this array.
+     * relation-derived values (e.g. the parent project's slug) can't
+     * appear in this array. version_id is included (unlike project/
+     * version) because it's a real column: the database engine can
+     * already filter by it without this, but Algolia/Meilisearch need a
+     * field present in the indexed record to filter on it at all, so this
+     * keeps `->where('version_id', ...)` scoping working everywhere.
      *
      * @return array<string, mixed>
      */
@@ -159,6 +163,7 @@ class Document extends Model implements Htmlable
             'title' => $this->title,
             'body' => $this->body,
             'section' => $this->section,
+            'version_id' => $this->version_id,
         ];
     }
 

@@ -53,12 +53,18 @@ via `LIKE`/full-text queries, no external service or separate index required.
 This package is built with it in mind:
 
 - `toSearchableArray()` only returns real `documents` columns (`title`,
-  `body`, `section`). The database engine executes its queries directly
-  against columns named in that array, so anything relation-derived (the
-  parent project or version) can't appear there — it would reference a
-  column that doesn't exist on the `documents` table. Scope a search to a
-  specific project/version with `->where('version_id', $version->id)`
-  instead.
+  `body`, `section`, `version_id`). The database engine executes its
+  queries directly against columns named in that array, so anything
+  relation-derived (the parent project's slug, the version's name) can't
+  appear there — it would reference a column that doesn't exist on the
+  `documents` table. Scope a search to a specific version with
+  `->where('version_id', $version->id)` instead; there's no `project_id`
+  column to filter by directly, so scoping by project means resolving its
+  version IDs first (`->whereIn('version_id', $project->versions()->pluck('id'))`).
+  `version_id` is included even though the database engine can already
+  filter by any real column without it — Algolia/Meilisearch only let you
+  filter on fields present in the indexed record, so this keeps
+  `where('version_id', ...)` working the same way across every engine.
 - `body` holds raw markdown (see the [README](../README.md)), not
   HTML-stripped plain text — the database engine reads the column value
   directly, so the stripped/rendered form used to matter only for
