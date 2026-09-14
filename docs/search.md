@@ -75,6 +75,23 @@ This package is built with it in mind:
   on MySQL/MariaDB/PostgreSQL (skipped on SQLite, which has no full-text
   index support — the `collection` engine used in this package's own tests
   doesn't need one).
+- `section` is annotated with `#[SearchUsingPrefix(['section'])]`, matching
+  `foo%` from the start of the string instead of `%foo%` anywhere within
+  it. A section is a short category label ("Getting Started"), so matching
+  from the start is both more intuitive and — backed by the plain `section`
+  index the migration adds — much cheaper than an unindexable substring
+  scan. On PostgreSQL specifically, a plain btree index only accelerates a
+  prefix `LIKE` under the `C` locale or a `varchar_pattern_ops`/
+  `text_pattern_ops` index; check your database's collation if this needs
+  to scale past a small `documents` table.
+- `version_id` gets neither attribute, on purpose. It's a real column
+  included solely so `->where('version_id', ...)` works the same way across
+  every engine (see above) — nobody should type a version's numeric ID
+  into a search box expecting relevant document matches. Scout doesn't
+  offer a "filterable but excluded from free-text matching" option, so
+  `version_id` still participates in the default `LIKE` strategy as an
+  accepted, low-impact side effect (occasionally matching a search term
+  that happens to be a substring of some row's ID).
 
 `searchableAs()` returns `config('docs.search.index_prefix') . 'documents'`,
 though it has no effect under the database engine, which always searches the

@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Scout\Attributes\SearchUsingFullText;
+use Laravel\Scout\Attributes\SearchUsingPrefix;
 use Laravel\Scout\Searchable;
 
 /**
@@ -154,9 +155,19 @@ class Document extends Model implements Htmlable
      * field present in the indexed record to filter on it at all, so this
      * keeps `->where('version_id', ...)` scoping working everywhere.
      *
+     * section uses prefix matching — it's a short category label (e.g.
+     * "Getting Started"), so matching from its start is both more useful
+     * than a substring scan and, unlike a numeric id, is a column where
+     * that actually applies. version_id gets no attribute: it's filtered
+     * via where(), never meant to be free-text matched, and neither
+     * strategy fits an integer column anyway — Scout has no "filter-only,
+     * excluded from free text" option, so it stays on the default LIKE
+     * strategy as an accepted, low-impact side effect.
+     *
      * @return array<string, mixed>
      */
     #[SearchUsingFullText(['title', 'body'])]
+    #[SearchUsingPrefix(['section'])]
     public function toSearchableArray(): array
     {
         return [
