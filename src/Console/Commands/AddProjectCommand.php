@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Foxws\Docs\Console\Commands;
 
+use Foxws\Docs\Enums\ProjectDriver;
 use Foxws\Docs\Models\Project;
 use Illuminate\Console\Command;
 use RuntimeException;
@@ -13,7 +14,7 @@ class AddProjectCommand extends Command
     protected $signature = 'docs:projects:add
         {slug : Unique identifier used in routing, e.g. "laravel-podman"}
         {title : Display title, e.g. "Laravel Podman"}
-        {github_repository? : "owner/repo", e.g. "foxws/laravel-podman" — required unless --driver=local}
+        {--github= : "owner/repo", e.g. "foxws/laravel-podman" — required unless --driver=local}
         {--driver=github : Where this project\'s docs live: "github" or "local"}
         {--local-path= : Base path to the docs folder, absolute or relative to the app root — required when --driver=local}
         {--docs-path=docs : Path to the docs folder within the repository/local path}
@@ -24,24 +25,24 @@ class AddProjectCommand extends Command
 
     public function handle(): int
     {
-        $driver = $this->stringOption('driver');
+        $driver = ProjectDriver::tryFrom($this->stringOption('driver'));
 
-        if (! in_array($driver, ['github', 'local'], true)) {
+        if ($driver === null) {
             $this->components->error('The --driver option must be "github" or "local".');
 
             return self::FAILURE;
         }
 
-        $githubRepository = $this->argument('github_repository');
+        $githubRepository = $this->option('github');
         $localPath = $this->option('local-path');
 
-        if ($driver === 'github' && ! is_string($githubRepository)) {
-            $this->components->error('The github_repository argument is required when --driver=github.');
+        if ($driver === ProjectDriver::Github && ! is_string($githubRepository)) {
+            $this->components->error('The --github option is required when --driver=github.');
 
             return self::FAILURE;
         }
 
-        if ($driver === 'local' && ! is_string($localPath)) {
+        if ($driver === ProjectDriver::Local && ! is_string($localPath)) {
             $this->components->error('The --local-path option is required when --driver=local.');
 
             return self::FAILURE;
@@ -55,8 +56,8 @@ class AddProjectCommand extends Command
         $attributes = [
             'title' => $this->argument('title'),
             'driver' => $driver,
-            'github_repository' => $driver === 'github' ? $githubRepository : null,
-            'local_path' => $driver === 'local' ? $localPath : null,
+            'github_repository' => $driver === ProjectDriver::Github ? $githubRepository : null,
+            'local_path' => $driver === ProjectDriver::Local ? $localPath : null,
             'docs_path' => $this->option('docs-path'),
             'seo' => $seo === [] ? null : $seo,
         ];

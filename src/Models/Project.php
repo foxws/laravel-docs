@@ -6,6 +6,7 @@ namespace Foxws\Docs\Models;
 
 use ArrayObject;
 use Foxws\Docs\Database\Factories\ProjectFactory;
+use Foxws\Docs\Enums\ProjectDriver;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,7 +21,7 @@ use Illuminate\Support\Str;
  * @property int $id
  * @property string $slug
  * @property string $title
- * @property string $driver
+ * @property ProjectDriver $driver
  * @property string|null $github_repository
  * @property string|null $local_path
  * @property string $docs_path
@@ -57,6 +58,7 @@ class Project extends Model
     protected function casts(): array
     {
         return [
+            'driver' => ProjectDriver::class,
             'seo' => AsArrayObject::class,
             'metadata' => AsArrayObject::class,
         ];
@@ -135,7 +137,7 @@ class Project extends Model
     public function sourceLocation(): string
     {
         return match ($this->driver) {
-            'local' => (string) $this->local_path,
+            ProjectDriver::Local => (string) $this->local_path,
             default => (string) $this->github_repository,
         };
     }

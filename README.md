@@ -50,7 +50,7 @@ php artisan migrate
 Register a project and at least one version, then sync its documentation from GitHub:
 
 ```bash
-php artisan docs:projects:add laravel-podman "Laravel Podman" foxws/laravel-podman
+php artisan docs:projects:add laravel-podman "Laravel Podman" --github=foxws/laravel-podman
 php artisan docs:versions:add laravel-podman latest main --default
 php artisan docs:sync
 ```

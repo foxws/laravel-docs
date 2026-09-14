@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Foxws\Docs\Database\Factories;
 
+use Foxws\Docs\Enums\ProjectDriver;
 use Foxws\Docs\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -24,7 +25,7 @@ class ProjectFactory extends Factory
         return [
             'slug' => $slug,
             'title' => ucwords(str_replace('-', ' ', $slug)),
-            'driver' => 'github',
+            'driver' => ProjectDriver::Github,
             'github_repository' => "foxws/{$slug}",
             'docs_path' => 'docs',
             'seo' => null,
@@ -34,7 +35,7 @@ class ProjectFactory extends Factory
     public function local(string $localPath = 'docs'): static
     {
         return $this->state(fn (array $attributes) => [
-            'driver' => 'local',
+            'driver' => ProjectDriver::Local,
             'github_repository' => null,
             'local_path' => $localPath,
         ]);

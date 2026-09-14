@@ -3,7 +3,7 @@
 Register a project with `docs:projects:add`:
 
 ```bash
-php artisan docs:projects:add laravel-podman "Laravel Podman" foxws/laravel-podman \
+php artisan docs:projects:add laravel-podman "Laravel Podman" --github=foxws/laravel-podman \
     --seo-title-pattern="%s — Laravel Podman — Foxws" \
     --seo-description="Podman Quadlet tooling for Laravel."
 ```
@@ -12,7 +12,7 @@ php artisan docs:projects:add laravel-podman "Laravel Podman" foxws/laravel-podm
 | --- | --- | --- |
 | `slug` | — | Unique identifier, used in routing. |
 | `title` | — | Display title. |
-| `github_repository` | — | `owner/repo`. Required unless `--driver=local`. |
+| `--github` | — | `owner/repo`. Required unless `--driver=local`. |
 | `--driver` | `github` | `github` or `local` — see [Local projects](#local-projects). |
 | `--local-path` | — | Base path to the docs folder. Required when `--driver=local`. |
 | `--docs-path` | `docs` | Path to the docs folder within the repository/local path. |
@@ -34,7 +34,7 @@ php artisan docs:projects:add stry "Stry" --driver=local --local-path=docs
 `--local-path` is a base path, absolute or relative to the application root,
 holding the same `{docs-path}/*.md` structure a GitHub repository would (see
 [Per-document front matter](#per-document-front-matter) below — it applies
-identically either way). `github_repository` becomes optional and is cleared
+identically either way). `--github` becomes optional and is cleared
 when `--driver=local`; switching a project from `local` back to `github`
 (or vice versa) is just re-running `docs:projects:add` with the other driver.
 

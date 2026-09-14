@@ -88,7 +88,7 @@ it('creates the configured project class via docs:projects:add', function () {
     $this->artisan('docs:projects:add', [
         'slug' => 'laravel-podman',
         'title' => 'Laravel Podman',
-        'github_repository' => 'foxws/laravel-podman',
+        '--github' => 'foxws/laravel-podman',
     ])->assertSuccessful();
 
     $project = TestProject::query()->where('slug', 'laravel-podman')->firstOrFail();

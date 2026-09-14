@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Foxws\Docs\Support;
 
 use Foxws\Docs\Contracts\DocsClient;
+use Foxws\Docs\Enums\ProjectDriver;
 use Foxws\Docs\Models\Project;
 
 /**
@@ -23,7 +24,7 @@ final class DocsClientResolver
     public function forProject(Project $project): DocsClient
     {
         return match ($project->driver) {
-            'local' => $this->local,
+            ProjectDriver::Local => $this->local,
             default => $this->github,
         };
     }

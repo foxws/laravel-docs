@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Foxws\Docs\Actions;
 
+use Foxws\Docs\Enums\ProjectDriver;
 use Foxws\Docs\Models\Project;
 use Foxws\Docs\Models\Version;
 use Foxws\Docs\Support\GitHubDocsClient;
@@ -26,7 +27,7 @@ final class DiscoverLatestVersion
             return null;
         }
 
-        if ($project->driver !== 'github') {
+        if ($project->driver !== ProjectDriver::Github) {
             return null;
         }
 

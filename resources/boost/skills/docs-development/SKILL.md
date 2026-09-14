@@ -28,7 +28,7 @@ Use this skill when a Laravel application needs to integrate the `foxws/laravel-
 Registration is a command, not a config array (it doesn't scale as a literal array once many packages are registered):
 
 ```bash
-php artisan docs:projects:add {slug} {title} {github_repository} \
+php artisan docs:projects:add {slug} {title} --github={owner/repo} \
     --docs-path=docs \
     --seo-title-pattern="%s — Foxws" --seo-description="..."
 

@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
+use Foxws\Docs\Enums\ProjectDriver;
 use Foxws\Docs\Models\Project;
 
 it('registers a new project', function () {
     $this->artisan('docs:projects:add', [
         'slug' => 'laravel-podman',
         'title' => 'Laravel Podman',
-        'github_repository' => 'foxws/laravel-podman',
+        '--github' => 'foxws/laravel-podman',
         '--seo-title-pattern' => '%s — Laravel Podman — Foxws',
         '--seo-description' => 'Podman Quadlet tooling for Laravel.',
     ])->assertSuccessful();
@@ -30,7 +31,7 @@ it('accepts a custom docs path', function () {
     $this->artisan('docs:projects:add', [
         'slug' => 'laravel-podman',
         'title' => 'Laravel Podman',
-        'github_repository' => 'foxws/laravel-podman',
+        '--github' => 'foxws/laravel-podman',
         '--docs-path' => 'documentation',
     ])->assertSuccessful();
 
@@ -50,7 +51,7 @@ it('registers a local-driver project', function () {
 
     $project = Project::query()->where('slug', 'stry')->firstOrFail();
 
-    expect($project->driver)->toBe('local')
+    expect($project->driver)->toBe(ProjectDriver::Local)
         ->and($project->local_path)->toBe('docs')
         ->and($project->github_repository)->toBeNull()
         ->and($project->sourceLocation())->toBe('docs');
@@ -66,7 +67,7 @@ it('rejects an unknown driver', function () {
     $this->assertDatabaseCount('projects', 0);
 });
 
-it('requires github_repository when driver is github', function () {
+it('requires --github when driver is github', function () {
     $this->artisan('docs:projects:add', [
         'slug' => 'laravel-podman',
         'title' => 'Laravel Podman',
@@ -94,7 +95,7 @@ it('updates an existing project matched by slug', function () {
     $this->artisan('docs:projects:add', [
         'slug' => 'laravel-podman',
         'title' => 'New Title',
-        'github_repository' => 'foxws/laravel-podman',
+        '--github' => 'foxws/laravel-podman',
     ])->assertSuccessful();
 
     $updated = $project->refresh();
