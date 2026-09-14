@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -27,6 +28,14 @@ return new class extends Migration
             $table->unique(['version_id', 'slug']);
             $table->unique(['version_id', 'source_path']);
         });
+
+        // SQLite has no full-text index support, so this is skipped there —
+        // fine for tests, which search via the "collection" Scout driver.
+        if (in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb', 'pgsql'], true)) {
+            Schema::table('documents', function (Blueprint $table) {
+                $table->fullText(['title', 'body']);
+            });
+        }
     }
 
     public function down(): void

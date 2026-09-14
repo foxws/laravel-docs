@@ -20,12 +20,12 @@ it('is not searchable when search is globally disabled', function () {
     expect($document->shouldBeSearchable())->toBeFalse();
 });
 
-it('is not searchable when the document opts out via its searchable flag', function () {
+it('ignores the per-document searchable flag, unlike the global config', function () {
     config()->set('docs.search.enabled', true);
 
     $document = Document::factory()->make(['searchable' => false]);
 
-    expect($document->shouldBeSearchable())->toBeFalse();
+    expect($document->shouldBeSearchable())->toBeTrue();
 });
 
 it('prefixes the search index name from config', function () {
