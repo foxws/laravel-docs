@@ -51,7 +51,7 @@ Register a project and at least one version, then sync its documentation from Gi
 
 ```bash
 php artisan docs:projects:add laravel-podman "Laravel Podman" foxws/laravel-podman
-php artisan docs:versions:add laravel-podman 2.0.0 v2.0.0 --default
+php artisan docs:versions:add laravel-podman latest main --default
 php artisan docs:sync
 ```
 
