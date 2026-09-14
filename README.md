@@ -42,6 +42,9 @@ php artisan vendor:publish --tag="docs-migrations"
 php artisan migrate
 ```
 
+> [!WARNING]
+> This package creates its own `projects`, `versions`, and `documents` tables via `loadMigrationsFrom()`. Don't add your own migrations for tables with these names — doing so will fail with a "relation already exists" error when both run. If you need custom columns, publish and edit these migrations instead (see above).
+
 ## Usage
 
 Register a project and at least one version, then sync its documentation from GitHub:
