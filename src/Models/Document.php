@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
+use Laravel\Scout\Attributes\SearchUsingFullText;
 use Laravel\Scout\Searchable;
 
 /**
@@ -124,9 +124,19 @@ class Document extends Model implements Htmlable
         return (bool) config('docs.cache.enabled');
     }
 
+    /**
+     * Global kill switch for automatic indexing (only meaningful for
+     * indexed engines — Algolia, Meilisearch, collection — since it gates
+     * the model observer Searchable registers on save/delete; a no-op
+     * under the database engine, which has no separate index to push to).
+     *
+     * This does not cover the per-document `searchable` column: Scout's
+     * database engine never consults shouldBeSearchable(), so add your own
+     * `->where('searchable', true)` when calling Document::search().
+     */
     public function shouldBeSearchable(): bool
     {
-        return (bool) config('docs.search.enabled') && $this->searchable !== false;
+        return (bool) config('docs.search.enabled');
     }
 
     public function searchableAs(): string
@@ -135,16 +145,25 @@ class Document extends Model implements Htmlable
     }
 
     /**
+     * Only real documents columns — the database engine executes its
+     * LIKE/full-text queries directly against columns named here, so
+     * relation-derived values (e.g. the parent project's slug) can't
+     * appear in this array. version_id is included (unlike project/
+     * version) because it's a real column: the database engine can
+     * already filter by it without this, but Algolia/Meilisearch need a
+     * field present in the indexed record to filter on it at all, so this
+     * keeps `->where('version_id', ...)` scoping working everywhere.
+     *
      * @return array<string, mixed>
      */
+    #[SearchUsingFullText(['title', 'body'])]
     public function toSearchableArray(): array
     {
         return [
             'title' => $this->title,
-            'body' => Str::of($this->toHtml())->stripTags()->squish()->toString(),
-            'project' => $this->version->project->slug,
-            'version' => $this->version->name,
+            'body' => $this->body,
             'section' => $this->section,
+            'version_id' => $this->version_id,
         ];
     }
 
