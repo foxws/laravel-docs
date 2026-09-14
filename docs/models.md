@@ -9,6 +9,7 @@
 | `slug` | Unique, used for routing/lookup. |
 | `title`, `github_repository`, `docs_path` | Static metadata, set via `docs:projects:add`. |
 | `seo` | Array cast; optional `title_pattern`/`description` override. |
+| `metadata` | Array cast; synced from the index document's front matter — see [Project metadata](registering-projects.md#project-metadata). |
 
 `Project::versions()` — `HasMany<Version>`.
 

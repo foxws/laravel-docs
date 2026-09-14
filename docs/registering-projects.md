@@ -127,3 +127,25 @@ seo:
 
 All fields are optional. `slug`/`title` fall back to the file's name when
 omitted; `order` defaults to `0`; `searchable` defaults to `true`.
+
+## Project metadata
+
+Add a `metadata:` block to your **index document**'s front matter
+(`{docs_path}/index.md`, e.g. `docs/index.md`) to attach your own data to a
+project — anything your app wants to show (a tag, a short description,
+whatever). It's stored as-is on `Project::metadata`, an array:
+
+```yaml
+---
+title: Introduction
+metadata:
+  role: Containers
+  eyebrow: "Containers · Rootless · Laravel 11"
+---
+```
+
+Only the index document is read for this — the same key elsewhere does
+nothing. It updates on every sync and clears to `null` if you remove it.
+Keep values plain text, normal case — if a UI wants it uppercase, that's a
+CSS concern (e.g. Tailwind's `uppercase`), not something to bake into the
+content.

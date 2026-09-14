@@ -64,6 +64,7 @@ final class SyncVersionDocuments
     private function upsertChanged(Version $version, DocsClient $client, Collection $entries): void
     {
         $project = $version->project;
+        $indexPath = $project->indexDocumentPath();
 
         foreach ($entries as $entry) {
             $existing = $version->documents()->firstWhere('source_path', $entry['path']);
@@ -89,6 +90,10 @@ final class SyncVersionDocuments
                     'seo' => $parsed->frontMatter['seo'] ?? null,
                 ],
             );
+
+            if ($entry['path'] === $indexPath) {
+                $project->update(['metadata' => $parsed->frontMatter['metadata'] ?? null]);
+            }
         }
     }
 }

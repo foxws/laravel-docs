@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('github_repository')->nullable();
             $table->string('local_path')->nullable();
             $table->string('docs_path')->default('docs');
+            $table->jsonb('metadata')->nullable();
             $table->jsonb('seo')->nullable();
             $table->timestamps();
         });

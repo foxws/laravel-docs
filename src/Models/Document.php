@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Foxws\Docs\Models;
 
+use ArrayObject;
 use Foxws\Docs\Database\Factories\DocumentFactory;
 use Foxws\Docs\Support\MarkdownDocumentParser;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,7 +29,7 @@ use Laravel\Scout\Searchable;
  * @property string $source_path
  * @property string $blob_sha
  * @property bool $searchable
- * @property array<string, mixed>|null $seo
+ * @property ArrayObject<string, mixed>|null $seo
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Version $version
@@ -64,7 +66,7 @@ class Document extends Model implements Htmlable
         return [
             'order' => 'integer',
             'searchable' => 'boolean',
-            'seo' => 'array',
+            'seo' => AsArrayObject::class,
         ];
     }
 
