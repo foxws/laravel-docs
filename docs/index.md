@@ -1,3 +1,11 @@
+---
+title: Introduction
+metadata:
+  role: Documentation
+  eyebrow: "Data layer · Markdown · GitHub"
+  desc: "Pull a package's docs/*.md folder from GitHub into queryable Eloquent models."
+---
+
 # Laravel Docs
 
 A headless package that pulls a package's `docs/*.md` folder — from GitHub, or

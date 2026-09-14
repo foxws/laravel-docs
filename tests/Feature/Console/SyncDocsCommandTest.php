@@ -168,3 +168,81 @@ it('does not update last_synced_at when the sync fails partway', function () {
     expect($version->last_synced_at)->toBeNull();
     expect($version->last_synced_sha)->toBeNull();
 });
+
+it("promotes the index document's metadata front matter onto the project", function () {
+    $version = fakeVersion();
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/main*' => Http::response(fakeTreeResponse([
+            ['path' => 'docs/index.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-a', 'size' => 512, 'url' => '...'],
+        ]), 200),
+        'raw.githubusercontent.com/foxws/example/main/docs/index.md' => Http::response(
+            "---\nslug: /\nmetadata:\n  role: CONTAINERS\n  eyebrow: 'CONTAINERS · ROOTLESS'\n---\n\n# Introduction",
+            200,
+        ),
+    ]);
+
+    $this->artisan('docs:sync')->assertSuccessful();
+
+    expect($version->project->refresh()->metadata->getArrayCopy())->toBe([
+        'role' => 'CONTAINERS',
+        'eyebrow' => 'CONTAINERS · ROOTLESS',
+    ]);
+});
+
+it('leaves project metadata alone for documents other than the index', function () {
+    $version = fakeVersion();
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/main*' => Http::response(fakeTreeResponse([
+            ['path' => 'docs/installation.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-a', 'size' => 512, 'url' => '...'],
+        ]), 200),
+        'raw.githubusercontent.com/foxws/example/main/docs/installation.md' => Http::response(
+            "---\nmetadata:\n  role: SHOULD NOT APPLY\n---\n\n# Installation",
+            200,
+        ),
+    ]);
+
+    $this->artisan('docs:sync')->assertSuccessful();
+
+    expect($version->project->refresh()->metadata)->toBeNull();
+});
+
+it('sets project metadata to null when the index document declares none', function () {
+    $project = Project::factory()->create(['slug' => 'example', 'github_repository' => 'foxws/example', 'metadata' => ['role' => 'STALE']]);
+    $version = Version::factory()->create(['project_id' => $project->id, 'ref' => 'main']);
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/main*' => Http::response(fakeTreeResponse([
+            ['path' => 'docs/index.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-a', 'size' => 512, 'url' => '...'],
+        ]), 200),
+        'raw.githubusercontent.com/foxws/example/main/docs/index.md' => Http::response('# Introduction, no front matter', 200),
+    ]);
+
+    $this->artisan('docs:sync')->assertSuccessful();
+
+    expect($version->project->refresh()->metadata)->toBeNull();
+});
+
+it('does not re-derive metadata when the index document is unchanged', function () {
+    $version = fakeVersion();
+    $version->documents()->create([
+        'slug' => 'index',
+        'title' => 'Introduction',
+        'body' => 'unchanged',
+        'source_path' => 'docs/index.md',
+        'blob_sha' => 'unchanged-sha',
+    ]);
+    $version->project->update(['metadata' => ['role' => 'PRESERVED']]);
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/main*' => Http::response(fakeTreeResponse([
+            ['path' => 'docs/index.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'unchanged-sha', 'size' => 512, 'url' => '...'],
+        ]), 200),
+        'raw.githubusercontent.com/foxws/example/main/docs/index.md' => Http::response('should not be fetched', 200),
+    ]);
+
+    $this->artisan('docs:sync')->assertSuccessful();
+
+    expect($version->project->refresh()->metadata->getArrayCopy())->toBe(['role' => 'PRESERVED']);
+});

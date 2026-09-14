@@ -18,7 +18,7 @@ it('registers a new project', function () {
     expect($project->title)->toBe('Laravel Podman')
         ->and($project->github_repository)->toBe('foxws/laravel-podman')
         ->and($project->docs_path)->toBe('docs')
-        ->and($project->seo)->toBe([
+        ->and($project->seo->getArrayCopy())->toBe([
             'title_pattern' => '%s — Laravel Podman — Foxws',
             'description' => 'Podman Quadlet tooling for Laravel.',
         ]);

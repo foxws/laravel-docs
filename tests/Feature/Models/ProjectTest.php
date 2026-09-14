@@ -61,6 +61,12 @@ it('resolves the source location from local_path for a local-driver project', fu
     expect($project->sourceLocation())->toBe('docs');
 });
 
+it('builds the index document path from docs_path', function () {
+    $project = Project::factory()->create(['docs_path' => 'docs']);
+
+    expect($project->indexDocumentPath())->toBe('docs/index.md');
+});
+
 it('iterates every registered project', function () {
     Project::factory()->count(3)->create();
 

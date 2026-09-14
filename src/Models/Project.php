@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Foxws\Docs\Models;
 
+use ArrayObject;
 use Foxws\Docs\Database\Factories\ProjectFactory;
+use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 /**
  * @property int $id
@@ -21,7 +24,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $github_repository
  * @property string|null $local_path
  * @property string $docs_path
- * @property array<string, mixed>|null $seo
+ * @property ArrayObject<string, mixed>|null $seo
+ * @property ArrayObject<string, mixed>|null $metadata
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Collection<int, Version> $versions
@@ -44,6 +48,7 @@ class Project extends Model
         'local_path',
         'docs_path',
         'seo',
+        'metadata',
     ];
 
     /**
@@ -52,7 +57,8 @@ class Project extends Model
     protected function casts(): array
     {
         return [
-            'seo' => 'array',
+            'seo' => AsArrayObject::class,
+            'metadata' => AsArrayObject::class,
         ];
     }
 
@@ -132,6 +138,14 @@ class Project extends Model
             'local' => (string) $this->local_path,
             default => (string) $this->github_repository,
         };
+    }
+
+    /**
+     * The document SyncVersionDocuments reads project metadata from.
+     */
+    public function indexDocumentPath(): string
+    {
+        return Str::finish($this->docs_path, '/').'index.md';
     }
 
     /**
