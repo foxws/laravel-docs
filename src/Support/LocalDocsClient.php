@@ -7,6 +7,7 @@ namespace Foxws\Docs\Support;
 use Foxws\Docs\Contracts\DocsClient;
 use Foxws\Docs\Support\Concerns\FiltersDocEntries;
 use Illuminate\Support\Str;
+use League\Flysystem\WhitespacePathNormalizer;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RuntimeException;
@@ -22,6 +23,10 @@ use SplFileInfo;
 final class LocalDocsClient implements DocsClient
 {
     use FiltersDocEntries;
+
+    public function __construct(
+        private readonly WhitespacePathNormalizer $normalizer = new WhitespacePathNormalizer,
+    ) {}
 
     /**
      * Walk every file under $repository and report it as a tree entry, with
@@ -57,7 +62,7 @@ final class LocalDocsClient implements DocsClient
 
     public function fetchRawContent(string $repository, string $ref, string $path): string
     {
-        $file = $this->resolveBasePath($repository).'/'.$path;
+        $file = $this->resolveBasePath($repository).'/'.$this->normalizer->normalizePath($path);
         $contents = file_get_contents($file);
 
         if ($contents === false) {
@@ -80,9 +85,19 @@ final class LocalDocsClient implements DocsClient
 
     private function resolveBasePath(string $repository): string
     {
-        $path = Str::startsWith($repository, '/') ? $repository : base_path($repository);
+        $path = $this->isAbsolutePath($repository) ? $repository : base_path($repository);
 
-        return rtrim($path, '/');
+        return rtrim($path, '/\\');
+    }
+
+    /**
+     * Str::startsWith($path, '/') alone misses Windows paths (`C:\...`,
+     * `C:/...`, UNC `\\server\share`), wrongly treating them as relative and
+     * prefixing them with base_path().
+     */
+    private function isAbsolutePath(string $path): bool
+    {
+        return Str::startsWith($path, ['/', '\\']) || (bool) preg_match('#^[A-Za-z]:[/\\\\]#', $path);
     }
 
     /**
@@ -107,6 +122,10 @@ final class LocalDocsClient implements DocsClient
 
     private function relativePath(string $base, SplFileInfo $file): string
     {
-        return ltrim(Str::after($file->getPathname(), $base), '/');
+        // SplFileInfo::getPathname() uses backslashes on Windows —
+        // normalizePath() converts those to forward slashes (among other
+        // things), so source_path always matches the GitHub driver's
+        // convention regardless of platform.
+        return $this->normalizer->normalizePath(Str::after($file->getPathname(), $base));
     }
 }

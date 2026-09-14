@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Foxws\Docs\Support\LocalDocsClient;
 use Illuminate\Support\Facades\File;
+use League\Flysystem\PathTraversalDetected;
 
 /**
  * Builds a fresh fixture directory and hands it to $callback, deleting it
@@ -84,6 +85,12 @@ it('reads a file\'s raw content by its relative path', function () {
         expect($content)->toBe('# Usage');
     });
 });
+
+it('rejects a path attempting to traverse outside the base path', function () {
+    withLocalDocsFixture(function (string $base) {
+        (new LocalDocsClient)->fetchRawContent($base, 'unused', '../../etc/passwd');
+    });
+})->throws(PathTraversalDetected::class);
 
 it('resolves a non-absolute repository relative to the application base path', function () {
     $relative = 'docs-fixture-'.uniqid();
