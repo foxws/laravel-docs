@@ -22,6 +22,13 @@ completes without error, so a failed run never marks a version as up to
 date. Each version of a project syncs independently, so v1.0.0 and v2.0.0
 can be at different commits, synced at different times.
 
+Pass `--project={slug}` to sync a single project instead of every registered
+one — useful right after registering or updating just that project:
+
+```bash
+php artisan docs:sync --project=laravel-podman
+```
+
 Schedule it, e.g. in `routes/console.php`:
 
 ```php

@@ -39,13 +39,16 @@ A project alone has nothing to sync — it needs at least one version. Each vers
 
 You don't have to run `docs:versions:add` at all: with `docs.sync.auto_discover_versions` enabled (the default), `docs:sync` checks each project's latest GitHub release and registers/updates it as the default version automatically. A project with no versions ever registered will pick up its first one this way.
 
+For the common case — a new project tracked from its default branch — pass `--sync` to `docs:projects:add` instead of the two-step `docs:versions:add`/`docs:sync` dance: it registers a `latest` version with `ref=main` (marked default) and syncs just that project immediately.
+
 ### 3. Sync documentation
 
 ```bash
 php artisan docs:sync
+php artisan docs:sync --project={slug} # only that project
 ```
 
-Syncs every registered version of every registered project. Before syncing, per project: auto-discovers the latest release as the default version (if enabled), then prunes old non-default versions beyond `docs.sync.keep_versions` (default `5`; set to `0` to keep everything; capped at `docs.sync.prune_chunk_size` per run; the default version is never pruned). Schedule it (e.g. `Schedule::command('docs:sync')->daily()` in `routes/console.php`) rather than relying on a webhook — there is none in v1.
+Syncs every registered version of every registered project, or just one with `--project`. Before syncing, per project: auto-discovers the latest release as the default version (if enabled), then prunes old non-default versions beyond `docs.sync.keep_versions` (default `5`; set to `0` to keep everything; capped at `docs.sync.prune_chunk_size` per run; the default version is never pruned). Schedule it (e.g. `Schedule::command('docs:sync')->daily()` in `routes/console.php`) rather than relying on a webhook — there is none in v1.
 
 ### 4. Query and render
 

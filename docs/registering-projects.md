@@ -18,6 +18,7 @@ php artisan docs:projects:add laravel-podman "Laravel Podman" --github=foxws/lar
 | `--docs-path` | `docs` | Path to the docs folder within the repository/local path. |
 | `--seo-title-pattern` | — | `sprintf`-style pattern, e.g. `"%s — Laravel Podman — Foxws"`. |
 | `--seo-description` | — | Fallback SEO description for this project's documents. |
+| `--sync` | off | Also register a `latest` version tracking `main` (marked default) and run `docs:sync --project={slug}` immediately — see [Quick start with --sync](#quick-start-with---sync). |
 
 The command matches on `slug` — running it again with the same slug updates
 that project's title/driver/repository/local path/docs_path/seo.
@@ -67,6 +68,22 @@ own `ref` and tracks its own `last_synced_at`/`last_synced_sha`.
 
 Once at least one version is registered, run `docs:sync` (see
 [syncing.md](syncing.md)) to pull documentation for every registered version.
+
+## Quick start with --sync
+
+For the common case — a new project, tracked from its default branch — skip
+`docs:versions:add` and `docs:sync` entirely:
+
+```bash
+php artisan docs:projects:add laravel-podman "Laravel Podman" --github=foxws/laravel-podman --sync
+```
+
+`--sync` registers a `latest` version with `ref=main`, marks it default, then
+runs `docs:sync --project=laravel-podman` immediately so the project has
+documents right away instead of waiting for the next scheduled sync. It
+works the same way for a `--driver=local` project (`ref` is ignored either
+way). Re-running the command with `--sync` re-syncs that version; it doesn't
+touch any other versions you've registered for the project since.
 
 ## Automatic version discovery
 

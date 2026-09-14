@@ -6,6 +6,7 @@ namespace Foxws\Docs\Console\Commands;
 
 use Foxws\Docs\Enums\ProjectDriver;
 use Foxws\Docs\Models\Project;
+use Foxws\Docs\Models\Version;
 use Illuminate\Console\Command;
 use RuntimeException;
 
@@ -19,7 +20,8 @@ class AddProjectCommand extends Command
         {--local-path= : Base path to the docs folder, absolute or relative to the app root — required when --driver=local}
         {--docs-path=docs : Path to the docs folder within the repository/local path}
         {--seo-title-pattern= : sprintf-style title pattern, e.g. "%s — Laravel Podman — Foxws"}
-        {--seo-description= : Fallback SEO description for this project\'s documents}';
+        {--seo-description= : Fallback SEO description for this project\'s documents}
+        {--sync : Also register a "latest" version tracking "main" (marked default) and sync it immediately}';
 
     protected $description = 'Register a project (or update an existing one, matched by slug). Register at least one version with docs:versions:add before syncing.';
 
@@ -64,6 +66,16 @@ class AddProjectCommand extends Command
 
         $project = Project::findOrCreate($this->stringArgument('slug'), $attributes)
             ->updateRegistration($attributes);
+
+        if ($this->option('sync')) {
+            $this->components->info("Registered project [{$project->slug}].");
+
+            Version::findOrCreate($project->id, 'latest', ['ref' => 'main'])
+                ->updateRegistration(['ref' => 'main'])
+                ->markAsDefault();
+
+            return $this->call('docs:sync', ['--project' => $project->slug]);
+        }
 
         $this->components->info("Registered project [{$project->slug}]. Register a version with `docs:versions:add` before syncing.");
 

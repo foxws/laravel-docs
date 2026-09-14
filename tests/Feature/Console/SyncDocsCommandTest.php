@@ -246,3 +246,27 @@ it('does not re-derive metadata when the index document is unchanged', function 
 
     expect($version->project->refresh()->metadata->getArrayCopy())->toBe(['role' => 'PRESERVED']);
 });
+
+it('only syncs the project matching --project', function () {
+    $projectA = Project::factory()->create(['slug' => 'example-a', 'github_repository' => 'foxws/example-a']);
+    Version::factory()->create(['project_id' => $projectA->id, 'ref' => 'main']);
+
+    $projectB = Project::factory()->create(['slug' => 'example-b', 'github_repository' => 'foxws/example-b']);
+    Version::factory()->create(['project_id' => $projectB->id, 'ref' => 'main']);
+
+    Http::fake([
+        'api.github.com/repos/foxws/example-a/git/trees/main*' => Http::response(fakeTreeResponse([
+            ['path' => 'docs/installation.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-a', 'size' => 512, 'url' => '...'],
+        ]), 200),
+        'raw.githubusercontent.com/foxws/example-a/main/docs/installation.md' => Http::response('# Installation', 200),
+    ]);
+
+    $this->artisan('docs:sync', ['--project' => 'example-a'])->assertSuccessful();
+
+    $this->assertDatabaseCount('documents', 1);
+    Http::assertNotSent(fn ($request) => str_contains((string) $request->url(), 'example-b'));
+});
+
+it('fails when --project does not match a registered slug', function () {
+    $this->artisan('docs:sync', ['--project' => 'missing'])->assertFailed();
+});

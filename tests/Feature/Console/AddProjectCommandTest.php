@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Foxws\Docs\Enums\ProjectDriver;
 use Foxws\Docs\Models\Project;
+use Illuminate\Support\Facades\Http;
 
 it('registers a new project', function () {
     $this->artisan('docs:projects:add', [
@@ -104,4 +105,47 @@ it('updates an existing project matched by slug', function () {
         ->and($updated->title)->toBe('New Title');
 
     $this->assertDatabaseCount('projects', 1);
+});
+
+it('registers a default "latest"/"main" version and syncs it immediately with --sync', function () {
+    Http::fake([
+        'api.github.com/repos/foxws/laravel-podman/releases/latest' => Http::response(null, 404),
+        'api.github.com/repos/foxws/laravel-podman/git/trees/main*' => Http::response([
+            'sha' => 'root-sha',
+            'tree' => [
+                ['path' => 'docs/installation.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-a', 'size' => 512, 'url' => '...'],
+            ],
+            'truncated' => false,
+        ], 200),
+        'raw.githubusercontent.com/foxws/laravel-podman/main/docs/installation.md' => Http::response('# Installation', 200),
+    ]);
+
+    $this->artisan('docs:projects:add', [
+        'slug' => 'laravel-podman',
+        'title' => 'Laravel Podman',
+        '--github' => 'foxws/laravel-podman',
+        '--sync' => true,
+    ])->assertSuccessful();
+
+    $project = Project::query()->where('slug', 'laravel-podman')->firstOrFail();
+    $version = $project->versions()->firstOrFail();
+
+    expect($version->name)->toBe('latest')
+        ->and($version->ref)->toBe('main')
+        ->and($version->is_default)->toBeTrue()
+        ->and($version->last_synced_at)->not->toBeNull();
+
+    $this->assertDatabaseCount('documents', 1);
+});
+
+it('does not register a version without --sync', function () {
+    $this->artisan('docs:projects:add', [
+        'slug' => 'laravel-podman',
+        'title' => 'Laravel Podman',
+        '--github' => 'foxws/laravel-podman',
+    ])->assertSuccessful();
+
+    $project = Project::query()->where('slug', 'laravel-podman')->firstOrFail();
+
+    expect($project->versions)->toBeEmpty();
 });
