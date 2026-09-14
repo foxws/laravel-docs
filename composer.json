@@ -1,6 +1,6 @@
 {
     "name": "foxws/laravel-docs",
-    "description": "Pull a package's docs/*.md folder from GitHub into queryable Eloquent models.",
+    "description": "Pull a package's docs/*.md folder from GitHub or a local folder into queryable Eloquent models.",
     "keywords": [
         "foxws",
         "laravel",

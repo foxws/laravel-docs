@@ -1,6 +1,7 @@
 # Laravel Docs
 
-A headless package that pulls a package's `docs/*.md` folder from GitHub into
+A headless package that pulls a package's `docs/*.md` folder — from GitHub, or
+a local folder for a project with no repository of its own yet — into
 queryable Eloquent models. There is no bundled frontend or theme — the
 consuming application renders the UI against the `Project` and `Document`
 models this package provides.

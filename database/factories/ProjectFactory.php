@@ -24,9 +24,19 @@ class ProjectFactory extends Factory
         return [
             'slug' => $slug,
             'title' => ucwords(str_replace('-', ' ', $slug)),
+            'driver' => 'github',
             'github_repository' => "foxws/{$slug}",
             'docs_path' => 'docs',
             'seo' => null,
         ];
+    }
+
+    public function local(string $localPath = 'docs'): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'driver' => 'local',
+            'github_repository' => null,
+            'local_path' => $localPath,
+        ]);
     }
 }

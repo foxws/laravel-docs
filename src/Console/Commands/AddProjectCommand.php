@@ -13,8 +13,10 @@ class AddProjectCommand extends Command
     protected $signature = 'docs:projects:add
         {slug : Unique identifier used in routing, e.g. "laravel-podman"}
         {title : Display title, e.g. "Laravel Podman"}
-        {github_repository : "owner/repo", e.g. "foxws/laravel-podman"}
-        {--docs-path=docs : Path to the docs folder within the repository}
+        {github_repository? : "owner/repo", e.g. "foxws/laravel-podman" — required unless --driver=local}
+        {--driver=github : Where this project\'s docs live: "github" or "local"}
+        {--local-path= : Base path to the docs folder, absolute or relative to the app root — required when --driver=local}
+        {--docs-path=docs : Path to the docs folder within the repository/local path}
         {--seo-title-pattern= : sprintf-style title pattern, e.g. "%s — Laravel Podman — Foxws"}
         {--seo-description= : Fallback SEO description for this project\'s documents}';
 
@@ -22,6 +24,29 @@ class AddProjectCommand extends Command
 
     public function handle(): int
     {
+        $driver = $this->stringOption('driver');
+
+        if (! in_array($driver, ['github', 'local'], true)) {
+            $this->components->error('The --driver option must be "github" or "local".');
+
+            return self::FAILURE;
+        }
+
+        $githubRepository = $this->argument('github_repository');
+        $localPath = $this->option('local-path');
+
+        if ($driver === 'github' && ! is_string($githubRepository)) {
+            $this->components->error('The github_repository argument is required when --driver=github.');
+
+            return self::FAILURE;
+        }
+
+        if ($driver === 'local' && ! is_string($localPath)) {
+            $this->components->error('The --local-path option is required when --driver=local.');
+
+            return self::FAILURE;
+        }
+
         $seo = array_filter([
             'title_pattern' => $this->option('seo-title-pattern'),
             'description' => $this->option('seo-description'),
@@ -29,7 +54,9 @@ class AddProjectCommand extends Command
 
         $attributes = [
             'title' => $this->argument('title'),
-            'github_repository' => $this->argument('github_repository'),
+            'driver' => $driver,
+            'github_repository' => $driver === 'github' ? $githubRepository : null,
+            'local_path' => $driver === 'local' ? $localPath : null,
             'docs_path' => $this->option('docs-path'),
             'seo' => $seo === [] ? null : $seo,
         ];
@@ -48,6 +75,17 @@ class AddProjectCommand extends Command
 
         if (! is_string($value)) {
             throw new RuntimeException("The [{$key}] argument must be a string.");
+        }
+
+        return $value;
+    }
+
+    private function stringOption(string $key): string
+    {
+        $value = $this->option($key);
+
+        if (! is_string($value)) {
+            throw new RuntimeException("The [--{$key}] option must be a string.");
         }
 
         return $value;

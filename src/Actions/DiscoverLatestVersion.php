@@ -16,11 +16,17 @@ final class DiscoverLatestVersion
 
     /**
      * Register the project's latest GitHub release as its default version.
-     * No-op if auto-discovery is disabled or the repository has no releases.
+     * No-op if auto-discovery is disabled, the project isn't GitHub-driven
+     * (a local folder has no "release" to discover), or the repository has
+     * no releases.
      */
     public function handle(Project $project): ?Version
     {
         if (! config('docs.sync.auto_discover_versions')) {
+            return null;
+        }
+
+        if ($project->driver !== 'github') {
             return null;
         }
 

@@ -14,9 +14,11 @@ return new class extends Migration
             $table->id();
             $table->string('slug')->unique();
             $table->string('title');
-            $table->string('github_repository');
+            $table->string('driver')->default('github');
+            $table->string('github_repository')->nullable();
+            $table->string('local_path')->nullable();
             $table->string('docs_path')->default('docs');
-            $table->json('seo')->nullable();
+            $table->jsonb('seo')->nullable();
             $table->timestamps();
         });
     }

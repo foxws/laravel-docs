@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Foxws\Docs\Support;
 
+use Foxws\Docs\Contracts\DocsClient;
+use Foxws\Docs\Support\Concerns\FiltersDocEntries;
 use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 
-final class GitHubDocsClient
+final class GitHubDocsClient implements DocsClient
 {
+    use FiltersDocEntries;
+
     /**
      * Fetch the full recursive git tree for a repository at a ref (branch,
      * tag, or SHA) via the GitHub Trees API (authenticated, for the higher
@@ -29,27 +31,6 @@ final class GitHubDocsClient
             ])
             ->throw()
             ->json();
-    }
-
-    /**
-     * Filter a tree's entries down to markdown files under the given docs path.
-     *
-     * @param  array<int, array{path: string, sha: string, type: string}>  $tree
-     * @return Collection<int, array{path: string, sha: string}>
-     */
-    public function filterDocEntries(array $tree, string $docsPath): Collection
-    {
-        $prefix = Str::finish($docsPath, '/');
-
-        return collect($tree)
-            ->filter(fn (array $entry) => $entry['type'] === 'blob'
-                && Str::startsWith($entry['path'], $prefix)
-                && Str::endsWith($entry['path'], '.md'))
-            ->map(fn (array $entry) => [
-                'path' => $entry['path'],
-                'sha' => $entry['sha'],
-            ])
-            ->values();
     }
 
     /**

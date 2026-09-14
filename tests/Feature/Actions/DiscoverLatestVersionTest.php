@@ -129,6 +129,20 @@ it('honors a custom version_name_pattern', function () {
     expect($version->name)->toBe('2.0');
 });
 
+it('does nothing for a local-driver project — a folder has no releases to discover', function () {
+    config()->set('docs.sync.auto_discover_versions', true);
+
+    $project = Project::factory()->local()->create();
+
+    Http::fake();
+
+    $version = app(DiscoverLatestVersion::class)->handle($project);
+
+    expect($version)->toBeNull();
+    Http::assertNothingSent();
+    $this->assertDatabaseCount('versions', 0);
+});
+
 it('does nothing when the repository has no releases', function () {
     config()->set('docs.sync.auto_discover_versions', true);
 

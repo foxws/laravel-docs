@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('source_path');
             $table->string('blob_sha');
             $table->boolean('searchable')->default(true);
-            $table->json('seo')->nullable();
+            $table->jsonb('seo')->nullable();
             $table->timestamps();
 
             $table->unique(['version_id', 'slug']);
