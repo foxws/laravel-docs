@@ -65,7 +65,7 @@ it('updates a document when its blob sha changes', function () {
     $version->documents()->create([
         'slug' => 'installation',
         'title' => 'Installation (old)',
-        'body' => '<p>old</p>',
+        'body' => 'old',
         'source_path' => 'docs/installation.md',
         'blob_sha' => 'old-sha',
     ]);
@@ -91,7 +91,7 @@ it('skips fetching raw content when the blob sha is unchanged', function () {
     $version->documents()->create([
         'slug' => 'usage',
         'title' => 'Usage',
-        'body' => '<p>unchanged</p>',
+        'body' => 'unchanged',
         'source_path' => 'docs/usage.md',
         'blob_sha' => 'blob-sha-b',
     ]);
@@ -113,7 +113,7 @@ it('prunes documents whose source path is no longer present remotely', function 
     $version->documents()->create([
         'slug' => 'removed',
         'title' => 'Removed',
-        'body' => '<p>gone</p>',
+        'body' => 'gone',
         'source_path' => 'docs/removed.md',
         'blob_sha' => 'removed-sha',
     ]);
@@ -134,7 +134,7 @@ it('does not prune when prune_missing is disabled', function () {
     $version->documents()->create([
         'slug' => 'orphan',
         'title' => 'Orphan',
-        'body' => '<p>still here</p>',
+        'body' => 'still here',
         'source_path' => 'docs/orphan.md',
         'blob_sha' => 'orphan-sha',
     ]);

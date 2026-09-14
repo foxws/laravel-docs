@@ -11,6 +11,6 @@ final readonly class ParsedDocument
      */
     public function __construct(
         public array $frontMatter,
-        public string $html,
+        public string $markdown,
     ) {}
 }

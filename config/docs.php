@@ -27,6 +27,18 @@ return [
         'description' => '',
     ],
 
+    'markdown' => [
+        /*
+         * Passed to Str::markdown() when rendering a document's body.
+         * Docs are pulled from GitHub repositories, so raw HTML is
+         * stripped and unsafe links are disallowed by default.
+         */
+        'options' => [
+            'html_input' => 'strip',
+            'allow_unsafe_links' => false,
+        ],
+    ],
+
     'search' => [
         'enabled' => env('DOCS_SEARCH_ENABLED', true),
         'index_prefix' => env('DOCS_SEARCH_PREFIX', 'foxws_'),
@@ -68,6 +80,28 @@ return [
 
     'github' => [
         'token' => env('DOCS_GITHUB_TOKEN'),
+    ],
+
+    'cache' => [
+        /*
+         * When disabled, Document::toHtml() always renders fresh from
+         * markdown, regardless of its $shouldCache argument.
+         */
+        'enabled' => env('DOCS_CACHE_ENABLED', true),
+
+        /*
+         * Store used to cache each document's rendered HTML. Set to null
+         * to use the application's default cache store.
+         */
+        'store' => env('DOCS_CACHE_STORE'),
+
+        /*
+         * How long (in seconds) rendered HTML stays cached before being
+         * re-rendered from markdown. Set to null to cache forever — safe
+         * since the cache key is tied to each document's blob_sha and
+         * changes automatically whenever docs:sync updates its content.
+         */
+        'ttl' => env('DOCS_CACHE_TTL', 86400),
     ],
 
 ];
