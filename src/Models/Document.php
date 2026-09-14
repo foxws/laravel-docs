@@ -101,7 +101,7 @@ class Document extends Model
      */
     public function toHtml(bool $shouldCache = true): string
     {
-        if (! $shouldCache) {
+        if (! $shouldCache || ! config('docs.cache.enabled')) {
             return app(MarkdownDocumentParser::class)->toHtml($this->body);
         }
 

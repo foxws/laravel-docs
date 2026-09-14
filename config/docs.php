@@ -72,6 +72,12 @@ return [
 
     'cache' => [
         /*
+         * When disabled, Document::toHtml() always renders fresh from
+         * markdown, regardless of its $shouldCache argument.
+         */
+        'enabled' => env('DOCS_CACHE_ENABLED', true),
+
+        /*
          * Store used to cache each document's rendered HTML. Set to null
          * to use the application's default cache store.
          */

@@ -51,3 +51,14 @@ it('bypasses the cache when asked not to cache', function () {
 
     Cache::shouldNotHaveReceived('store');
 });
+
+it('bypasses the cache when caching is disabled in config', function () {
+    config()->set('docs.cache.enabled', false);
+    Cache::spy();
+
+    $document = Document::factory()->make(['body' => '# Uncached']);
+
+    expect($document->toHtml())->toContain('Uncached');
+
+    Cache::shouldNotHaveReceived('store');
+});
