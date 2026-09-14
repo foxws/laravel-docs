@@ -19,7 +19,12 @@ final class MarkdownDocumentParser
 
         return new ParsedDocument(
             frontMatter: $document->matter(),
-            html: $this->converter->convert($document->body())->getContent(),
+            markdown: $document->body(),
         );
+    }
+
+    public function toHtml(string $markdown): string
+    {
+        return $this->converter->convert($markdown)->getContent();
     }
 }

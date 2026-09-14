@@ -79,7 +79,7 @@ final class SyncVersionDocuments
                 [
                     'slug' => $parsed->frontMatter['slug'] ?? $stem->toString(),
                     'title' => $parsed->frontMatter['title'] ?? $stem->headline()->toString(),
-                    'body' => $parsed->html,
+                    'body' => $parsed->markdown,
                     'order' => $parsed->frontMatter['order'] ?? 0,
                     'section' => $parsed->frontMatter['section'] ?? null,
                     'blob_sha' => $entry['sha'],

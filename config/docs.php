@@ -70,4 +70,20 @@ return [
         'token' => env('DOCS_GITHUB_TOKEN'),
     ],
 
+    'cache' => [
+        /*
+         * Store used to cache each document's rendered HTML. Set to null
+         * to use the application's default cache store.
+         */
+        'store' => env('DOCS_CACHE_STORE'),
+
+        /*
+         * How long (in seconds) rendered HTML stays cached before being
+         * re-rendered from markdown. Set to null to cache forever — safe
+         * since the cache key is tied to each document's blob_sha and
+         * changes automatically whenever docs:sync updates its content.
+         */
+        'ttl' => env('DOCS_CACHE_TTL', 86400),
+    ],
+
 ];

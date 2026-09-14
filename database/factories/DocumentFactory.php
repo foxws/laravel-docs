@@ -26,7 +26,7 @@ class DocumentFactory extends Factory
             'version_id' => Version::factory(),
             'slug' => $slug,
             'title' => ucwords(str_replace('-', ' ', $slug)),
-            'body' => '<p>'.$this->faker->paragraph().'</p>',
+            'body' => $this->faker->paragraph(),
             'order' => 0,
             'section' => null,
             'source_path' => "docs/{$slug}.md",

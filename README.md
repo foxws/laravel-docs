@@ -62,6 +62,8 @@ $document = $version->documents()->where('slug', 'installation')->firstOrFail();
 $document->resolveSeoTitle(); // "Installation — Laravel Podman — Foxws"
 ```
 
+`Document::body` stores the raw markdown pulled from GitHub — nothing is pre-rendered at sync time, so you're free to render it however you like. Call `$document->toHtml()` for a CommonMark-rendered HTML string; the result is cached per document, keyed by its `blob_sha`, so it re-renders automatically only when `docs:sync` pulls new content. Pass `toHtml(shouldCache: false)` to skip the cache, and tune the store/TTL via the `docs.cache` config.
+
 See the [documentation](docs/index.md) for configuration, registering projects and versions, scheduling syncs, and search.
 
 ## Changelog
