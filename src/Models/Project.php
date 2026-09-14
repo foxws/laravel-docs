@@ -17,7 +17,9 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property string $slug
  * @property string $title
- * @property string $github_repository
+ * @property string $driver
+ * @property string|null $github_repository
+ * @property string|null $local_path
  * @property string $docs_path
  * @property array<string, mixed>|null $seo
  * @property Carbon $created_at
@@ -37,7 +39,9 @@ class Project extends Model
     protected $fillable = [
         'slug',
         'title',
+        'driver',
         'github_repository',
+        'local_path',
         'docs_path',
         'seo',
     ];
@@ -102,15 +106,32 @@ class Project extends Model
     }
 
     /**
-     * Sync the registration fields (title, repository, docs path, seo).
+     * Sync the registration fields (title, driver, repository/local path,
+     * docs path, seo).
      *
      * @param  array<string, mixed>  $attributes
      */
     public function updateRegistration(array $attributes): static
     {
-        $this->update(Arr::only($attributes, ['title', 'github_repository', 'docs_path', 'seo']));
+        $this->update(Arr::only($attributes, [
+            'title', 'driver', 'github_repository', 'local_path', 'docs_path', 'seo',
+        ]));
 
         return $this;
+    }
+
+    /**
+     * Where this project's docs live, per its driver — a GitHub "owner/repo"
+     * slug, or a local base path. SyncVersionDocuments/DiscoverLatestVersion
+     * read this instead of a column name, so they don't need to know which
+     * driver they're dealing with.
+     */
+    public function sourceLocation(): string
+    {
+        return match ($this->driver) {
+            'local' => (string) $this->local_path,
+            default => (string) $this->github_repository,
+        };
     }
 
     /**

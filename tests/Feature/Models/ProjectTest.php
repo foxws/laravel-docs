@@ -49,6 +49,18 @@ it('ignores attributes outside the registration fields', function () {
     expect($project->slug)->toBe('original-slug');
 });
 
+it('resolves the source location from github_repository for a github-driver project', function () {
+    $project = Project::factory()->create(['github_repository' => 'foxws/laravel-podman']);
+
+    expect($project->sourceLocation())->toBe('foxws/laravel-podman');
+});
+
+it('resolves the source location from local_path for a local-driver project', function () {
+    $project = Project::factory()->local('docs')->create();
+
+    expect($project->sourceLocation())->toBe('docs');
+});
+
 it('iterates every registered project', function () {
     Project::factory()->count(3)->create();
 

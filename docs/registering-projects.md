@@ -12,13 +12,37 @@ php artisan docs:projects:add laravel-podman "Laravel Podman" foxws/laravel-podm
 | --- | --- | --- |
 | `slug` | — | Unique identifier, used in routing. |
 | `title` | — | Display title. |
-| `github_repository` | — | `owner/repo`. |
-| `--docs-path` | `docs` | Path to the docs folder within the repository. |
+| `github_repository` | — | `owner/repo`. Required unless `--driver=local`. |
+| `--driver` | `github` | `github` or `local` — see [Local projects](#local-projects). |
+| `--local-path` | — | Base path to the docs folder. Required when `--driver=local`. |
+| `--docs-path` | `docs` | Path to the docs folder within the repository/local path. |
 | `--seo-title-pattern` | — | `sprintf`-style pattern, e.g. `"%s — Laravel Podman — Foxws"`. |
 | `--seo-description` | — | Fallback SEO description for this project's documents. |
 
 The command matches on `slug` — running it again with the same slug updates
-that project's title/repository/docs_path/seo.
+that project's title/driver/repository/local path/docs_path/seo.
+
+## Local projects
+
+A project with no GitHub repository yet (or one you'd simply rather author
+locally) can pull its docs from a folder instead:
+
+```bash
+php artisan docs:projects:add stry "Stry" --driver=local --local-path=docs
+```
+
+`--local-path` is a base path, absolute or relative to the application root,
+holding the same `{docs-path}/*.md` structure a GitHub repository would (see
+[Per-document front matter](#per-document-front-matter) below — it applies
+identically either way). `github_repository` becomes optional and is cleared
+when `--driver=local`; switching a project from `local` back to `github`
+(or vice versa) is just re-running `docs:projects:add` with the other driver.
+
+Local projects skip [automatic version discovery](#automatic-version-discovery)
+entirely — a folder has no releases to discover — so register at least one
+version for it explicitly, same as any other project. `ref` is unused for a
+local driver (a folder has no concept of a git ref) but still required by
+`docs:versions:add`; any label works, e.g. `local`.
 
 A project alone has nothing to sync — register at least one version:
 

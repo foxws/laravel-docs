@@ -16,7 +16,7 @@ class SyncDocsCommand extends Command
 {
     protected $signature = 'docs:sync';
 
-    protected $description = 'Sync project documentation from GitHub.';
+    protected $description = 'Sync every registered project\'s documentation from its source (GitHub or a local folder).';
 
     public function handle(
         SyncVersionDocuments $syncVersionDocuments,

@@ -9,7 +9,7 @@
     <a href="https://packagist.org/packages/foxws/laravel-docs"><img src="https://img.shields.io/packagist/dt/foxws/laravel-docs.svg?style=flat-square" alt="Total Downloads"></a>
 </p>
 
-Pulls a package's `docs/*.md` folder from GitHub into queryable Eloquent models — no bundled frontend or theme. The consuming application owns all rendering; this package is just the data layer.
+Pulls a package's `docs/*.md` folder from GitHub or a local folder into queryable Eloquent models — no bundled frontend or theme. The consuming application owns all rendering; this package is just the data layer.
 
 ## Installation
 

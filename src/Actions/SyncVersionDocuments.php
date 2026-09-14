@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Foxws\Docs\Actions;
 
+use Foxws\Docs\Contracts\DocsClient;
 use Foxws\Docs\Models\Document;
 use Foxws\Docs\Models\Version;
-use Foxws\Docs\Support\GitHubDocsClient;
+use Foxws\Docs\Support\DocsClientResolver;
 use Foxws\Docs\Support\MarkdownDocumentParser;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -14,23 +15,24 @@ use Illuminate\Support\Str;
 final class SyncVersionDocuments
 {
     public function __construct(
-        private readonly GitHubDocsClient $client,
+        private readonly DocsClientResolver $clients,
         private readonly MarkdownDocumentParser $parser,
     ) {}
 
     /**
-     * Prunes documents no longer in the remote tree, then upserts
+     * Prunes documents no longer present at the source, then upserts
      * changed/new ones. Only marks the version synced if both succeed.
      */
     public function handle(Version $version): void
     {
         $project = $version->project;
+        $client = $this->clients->forProject($project);
 
-        $tree = $this->client->fetchTree($project->github_repository, $version->ref);
-        $entries = $this->client->filterDocEntries($tree['tree'], $project->docs_path);
+        $tree = $client->fetchTree($project->sourceLocation(), $version->ref);
+        $entries = $client->filterDocEntries($tree['tree'], $project->docs_path);
 
         $this->pruneMissing($version, $entries->pluck('path'));
-        $this->upsertChanged($version, $entries);
+        $this->upsertChanged($version, $client, $entries);
 
         $version->update([
             'last_synced_at' => now(),
@@ -59,7 +61,7 @@ final class SyncVersionDocuments
     /**
      * @param  Collection<int, array{path: string, sha: string}>  $entries
      */
-    private function upsertChanged(Version $version, Collection $entries): void
+    private function upsertChanged(Version $version, DocsClient $client, Collection $entries): void
     {
         $project = $version->project;
 
@@ -70,7 +72,7 @@ final class SyncVersionDocuments
                 continue;
             }
 
-            $raw = $this->client->fetchRawContent($project->github_repository, $version->ref, $entry['path']);
+            $raw = $client->fetchRawContent($project->sourceLocation(), $version->ref, $entry['path']);
             $parsed = $this->parser->parse($raw);
             $stem = Str::of($entry['path'])->afterLast('/')->beforeLast('.md');
 
