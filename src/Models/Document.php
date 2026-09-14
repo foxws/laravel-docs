@@ -6,6 +6,7 @@ namespace Foxws\Docs\Models;
 
 use Foxws\Docs\Database\Factories\DocumentFactory;
 use Foxws\Docs\Support\MarkdownDocumentParser;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,7 +31,7 @@ use Laravel\Scout\Searchable;
  * @property Carbon $updated_at
  * @property Version $version
  */
-class Document extends Model
+class Document extends Model implements Htmlable
 {
     /** @use HasFactory<DocumentFactory> */
     use HasFactory;
@@ -97,12 +98,16 @@ class Document extends Model
 
     /**
      * Render the markdown body to HTML, cached by blob sha so a re-sync
-     * that changes the content automatically busts stale entries.
+     * that changes the content automatically busts stale entries. Pass
+     * $shouldCache to override shouldCache() for this call only.
+     *
+     * Implements Htmlable, so `{{ $document }}` in Blade renders this
+     * unescaped instead of the raw markdown.
      */
-    public function toHtml(bool $shouldCache = true): string
+    public function toHtml(?bool $shouldCache = null): string
     {
-        if (! $shouldCache || ! config('docs.cache.enabled')) {
-            return app(MarkdownDocumentParser::class)->toHtml($this->body);
+        if (! ($shouldCache ?? $this->shouldCache())) {
+            return app(MarkdownDocumentParser::class)->renderAsHtml($this->body);
         }
 
         $store = Cache::store(config('docs.cache.store'));
@@ -112,6 +117,11 @@ class Document extends Model
         return $ttl === null
             ? $store->rememberForever($key, fn () => $this->toHtml(shouldCache: false))
             : $store->remember($key, $ttl, fn () => $this->toHtml(shouldCache: false));
+    }
+
+    public function shouldCache(): bool
+    {
+        return (bool) config('docs.cache.enabled');
     }
 
     public function shouldBeSearchable(): bool

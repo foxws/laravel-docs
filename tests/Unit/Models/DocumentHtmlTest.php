@@ -3,7 +3,15 @@
 declare(strict_types=1);
 
 use Foxws\Docs\Models\Document;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Cache;
+
+it('implements Htmlable so Blade renders it unescaped', function () {
+    $document = Document::factory()->make(['body' => '# Installation']);
+
+    expect($document)->toBeInstanceOf(Htmlable::class);
+    expect(e($document))->toBe($document->toHtml());
+});
 
 it('renders the markdown body to html', function () {
     $document = Document::factory()->make([
@@ -61,4 +69,29 @@ it('bypasses the cache when caching is disabled in config', function () {
     expect($document->toHtml())->toContain('Uncached');
 
     Cache::shouldNotHaveReceived('store');
+});
+
+it('reflects the docs.cache.enabled config via shouldCache', function () {
+    $document = Document::factory()->make();
+
+    config()->set('docs.cache.enabled', true);
+    expect($document->shouldCache())->toBeTrue();
+
+    config()->set('docs.cache.enabled', false);
+    expect($document->shouldCache())->toBeFalse();
+});
+
+it('lets an explicit shouldCache argument override a disabled config', function () {
+    config()->set('docs.cache.enabled', false);
+
+    $document = Document::factory()->make([
+        'body' => '# Original',
+        'blob_sha' => 'sha-a',
+    ]);
+
+    $document->toHtml(shouldCache: true);
+
+    $document->body = '# Changed';
+
+    expect($document->toHtml(shouldCache: true))->toContain('Original');
 });

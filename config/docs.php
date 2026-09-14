@@ -27,6 +27,18 @@ return [
         'description' => '',
     ],
 
+    'markdown' => [
+        /*
+         * Passed to Str::markdown() when rendering a document's body.
+         * Docs are pulled from GitHub repositories, so raw HTML is
+         * stripped and unsafe links are disallowed by default.
+         */
+        'options' => [
+            'html_input' => 'strip',
+            'allow_unsafe_links' => false,
+        ],
+    ],
+
     'search' => [
         'enabled' => env('DOCS_SEARCH_ENABLED', true),
         'index_prefix' => env('DOCS_SEARCH_PREFIX', 'foxws_'),

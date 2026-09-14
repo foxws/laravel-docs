@@ -36,8 +36,23 @@ it('treats documents without front matter as having no overrides', function () {
 });
 
 it('renders markdown to html', function () {
-    $html = (new MarkdownDocumentParser)->toHtml("# Installation\n\nRun `composer require`.");
+    $html = (new MarkdownDocumentParser)->renderAsHtml("# Installation\n\nRun `composer require`.");
 
     expect($html)->toContain('<h1>Installation</h1>');
     expect($html)->toContain('<code>composer require</code>');
+});
+
+it('strips raw html and disallows unsafe links by default', function () {
+    $parser = new MarkdownDocumentParser;
+
+    expect($parser->renderAsHtml('<script>alert(1)</script>'))->not->toContain('<script>');
+    expect($parser->renderAsHtml('[click me](javascript:alert(1))'))->not->toContain('href=');
+});
+
+it('merges per-call options over the configured defaults', function () {
+    config()->set('docs.markdown.options', ['html_input' => 'strip']);
+
+    $html = (new MarkdownDocumentParser)->renderAsHtml('<em>hi</em>', ['html_input' => 'allow']);
+
+    expect($html)->toContain('<em>hi</em>');
 });
