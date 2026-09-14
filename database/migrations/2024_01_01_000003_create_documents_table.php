@@ -27,6 +27,7 @@ return new class extends Migration
 
             $table->unique(['version_id', 'slug']);
             $table->unique(['version_id', 'source_path']);
+            $table->index('section');
         });
 
         // SQLite has no full-text index support, so this is skipped there —
