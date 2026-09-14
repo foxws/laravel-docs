@@ -28,6 +28,30 @@ MD;
     expect($parsed->markdown)->not->toContain('title: Installation');
 });
 
+it('ignores a --- line that appears later in the body, not at the very start', function () {
+    // A doc that documents front matter syntax, showing an example inside a
+    // fenced code block — the example's own delimiters must never be read
+    // as this document's real front matter.
+    $raw = <<<'MD'
+    # Front matter
+
+    Example:
+
+    ```
+    ---
+    title: Example
+    ---
+    ```
+
+    That's it.
+    MD;
+
+    $parsed = (new MarkdownDocumentParser)->parse($raw);
+
+    expect($parsed->frontMatter)->toBe([]);
+    expect($parsed->markdown)->toBe($raw);
+});
+
 it('treats documents without front matter as having no overrides', function () {
     $parsed = (new MarkdownDocumentParser)->parse("# Just a heading\n\nNo front matter here.");
 
