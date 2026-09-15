@@ -22,7 +22,11 @@ class VersionFactory extends Factory
     {
         return [
             'project_id' => Project::factory(),
-            'name' => $this->faker->numerify('#.#.#'),
+            // Unique, not just per-project — `numerify('#.#.#')` alone only
+            // has 1,000 possible values, and tests that create several
+            // versions for one project hit real collisions against the
+            // (project_id, name) unique constraint often enough to flake CI.
+            'name' => $this->faker->unique()->numerify('#.#.#'),
             'ref' => 'main',
             'is_default' => false,
             'last_synced_at' => null,
