@@ -178,6 +178,21 @@ class Project extends Model
     }
 
     /**
+     * The named version to read from, falling back to defaultVersion() when
+     * $name is null or doesn't match any registered version — an unknown
+     * name (a stale link, a typo'd query string) degrades to the default
+     * rather than a dead end.
+     */
+    public function versionOrDefault(?string $name): ?Version
+    {
+        if ($name === null) {
+            return $this->defaultVersion();
+        }
+
+        return $this->versions->firstWhere('name', $name) ?? $this->defaultVersion();
+    }
+
+    /**
      * The document that corresponds to indexDocumentPath() within an
      * already-loaded collection of this project's documents — `index.md`,
      * or `about.md` for a project with no index of its own. Accepts the
