@@ -105,6 +105,22 @@ it('resolves the default version, falling back to the first when none is marked 
     expect($project->refresh()->defaultVersion()->is($default))->toBeTrue();
 });
 
+it('resolves a version by name, falling back to the default when the name is null', function () {
+    $project = Project::factory()->create();
+    $default = Version::factory()->create(['project_id' => $project->id, 'name' => '1.0.1', 'is_default' => true]);
+    $latest = Version::factory()->create(['project_id' => $project->id, 'name' => 'latest', 'is_default' => false]);
+
+    expect($project->refresh()->versionOrDefault('latest')->is($latest))->toBeTrue()
+        ->and($project->versionOrDefault(null)->is($default))->toBeTrue();
+});
+
+it('falls back to the default version when the requested name does not exist', function () {
+    $project = Project::factory()->create();
+    $default = Version::factory()->create(['project_id' => $project->id, 'is_default' => true]);
+
+    expect($project->refresh()->versionOrDefault('nonexistent')->is($default))->toBeTrue();
+});
+
 it('resolves the index document from index.md, falling back to about.md', function () {
     $project = Project::factory()->create();
     $version = Version::factory()->create(['project_id' => $project->id]);

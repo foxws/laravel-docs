@@ -37,6 +37,10 @@ specific choice: the one marked `is_default`, or the first registered if
 none is. Reads `$project->versions` in memory, so eager-load it
 (`Project::with('versions')`) to avoid a query per project.
 
+`$project->versionOrDefault($name)` — the version matching `$name` (e.g.
+from a `?version=` query string), falling back to `defaultVersion()` when
+`$name` is `null` or doesn't match any registered version.
+
 `$project->indexDocument($documents)` — given an already-loaded collection
 of this project's documents (any version), returns the one at
 `indexDocumentPath()` — `index.md`, or `about.md` for a project with no
