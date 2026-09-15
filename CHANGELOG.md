@@ -2,6 +2,17 @@
 
 All notable changes to `laravel-docs` will be documented in this file.
 
+## v1.1.0 - 2026-09-15
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Other Changes
+
+* Add Project::versionOrDefault() to resolve a version by name by @francoism90 in https://github.com/foxws/laravel-docs/pull/16
+
+**Full Changelog**: https://github.com/foxws/laravel-docs/compare/v1.0.1...v1.1.0
+
 ## v1.0.1 - 2026-09-15
 
 ### Fixed
