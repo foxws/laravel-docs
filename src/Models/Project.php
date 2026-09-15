@@ -179,13 +179,14 @@ class Project extends Model
 
     /**
      * The named version to read from, falling back to defaultVersion() when
-     * $name is null or doesn't match any registered version — an unknown
-     * name (a stale link, a typo'd query string) degrades to the default
-     * rather than a dead end.
+     * $name is blank (null, '', or whitespace — a query string param present
+     * with no value reads as '', not null) or doesn't match any registered
+     * version — an unknown name (a stale link, a typo'd query string)
+     * degrades to the default rather than a dead end.
      */
     public function versionOrDefault(?string $name): ?Version
     {
-        if ($name === null) {
+        if (blank($name)) {
             return $this->defaultVersion();
         }
 
