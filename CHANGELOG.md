@@ -2,6 +2,12 @@
 
 All notable changes to `laravel-docs` will be documented in this file.
 
+## v1.0.1 - 2026-09-15
+
+### Fixed
+
+- `Document::title` now uses prefix matching instead of full-text search. Postgres full-text search matches whole, stemmed words, so a search-as-you-type query like "insta" never surfaced a document titled "Installation" — it now does.
+
 ## v1.0.0 - 2026-09-15
 
 First release.
