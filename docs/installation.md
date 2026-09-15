@@ -1,0 +1,31 @@
+---
+section: Getting Started
+order: 1
+---
+
+# Installation
+
+```bash
+composer require foxws/laravel-docs
+```
+
+Publish the config file:
+
+```bash
+php artisan vendor:publish --tag="docs-config"
+```
+
+Migrations for the `projects`, `versions`, and `documents` tables run
+automatically — no `vendor:publish` step is required for them, but they can
+still be published (and customized) via:
+
+```bash
+php artisan vendor:publish --tag="docs-migrations"
+```
+
+Once at least one project and version are registered (see
+[registering-projects.md](registering-projects.md)), run:
+
+```bash
+php artisan docs:sync
+```
