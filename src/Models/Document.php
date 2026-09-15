@@ -158,19 +158,27 @@ class Document extends Model implements Htmlable
      * field present in the indexed record to filter on it at all, so this
      * keeps `->where('version_id', ...)` scoping working everywhere.
      *
-     * section uses prefix matching — it's a short category label (e.g.
-     * "Getting Started"), so matching from its start is both more useful
-     * than a substring scan and, unlike a numeric id, is a column where
-     * that actually applies. version_id gets no attribute: it's filtered
-     * via where(), never meant to be free-text matched, and neither
-     * strategy fits an integer column anyway — Scout has no "filter-only,
-     * excluded from free text" option, so it stays on the default LIKE
-     * strategy as an accepted, low-impact side effect.
+     * title and section both use prefix matching — a docs UI's
+     * search-as-you-type box wants "insta" to already surface a document
+     * titled "Installation", and Postgres full-text search can't do that:
+     * plainto_tsquery/websearch_to_tsquery (Scout's only options here) match
+     * whole, stemmed words, so a partial word like "insta" simply isn't
+     * "installation" to tsquery — it'd need the `:*` prefix operator, which
+     * Scout's full-text attribute has no mode for. body stays full-text: a
+     * prefix match against a whole markdown document would only ever fire
+     * if the query happened to match its literal opening characters, and
+     * full-text gives relevance-ranked, typo-tolerant whole-word/phrase
+     * matches instead, which is what searching within body content wants.
+     * version_id gets no attribute: it's filtered via where(), never meant
+     * to be free-text matched, and neither strategy fits an integer column
+     * anyway — Scout has no "filter-only, excluded from free text" option,
+     * so it stays on the default LIKE strategy as an accepted, low-impact
+     * side effect.
      *
      * @return array<string, mixed>
      */
-    #[SearchUsingFullText(['title', 'body'])]
-    #[SearchUsingPrefix(['section'])]
+    #[SearchUsingFullText(['body'])]
+    #[SearchUsingPrefix(['title', 'section'])]
     public function toSearchableArray(): array
     {
         return [

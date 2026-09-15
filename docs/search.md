@@ -75,20 +75,26 @@ This package is built with it in mind:
   directly, so the stripped/rendered form used to matter only for
   third-party or `collection` engines and isn't worth computing on every
   index write anymore.
-- `toSearchableArray()` is annotated with `#[SearchUsingFullText(['title',
-  'body'])]`, and the `documents` migration adds a matching full-text index
-  on MySQL/MariaDB/PostgreSQL (skipped on SQLite, which has no full-text
-  index support — the `collection` engine used in this package's own tests
+- `body` is annotated with `#[SearchUsingFullText(['body'])]`, and the
+  `documents` migration adds a matching full-text index on
+  MySQL/MariaDB/PostgreSQL (skipped on SQLite, which has no full-text index
+  support — the `collection` engine used in this package's own tests
   doesn't need one).
-- `section` is annotated with `#[SearchUsingPrefix(['section'])]`, matching
-  `foo%` from the start of the string instead of `%foo%` anywhere within
-  it. A section is a short category label ("Getting Started"), so matching
-  from the start is both more intuitive and — backed by the plain `section`
-  index the migration adds — much cheaper than an unindexable substring
-  scan. On PostgreSQL specifically, a plain btree index only accelerates a
-  prefix `LIKE` under the `C` locale or a `varchar_pattern_ops`/
-  `text_pattern_ops` index; check your database's collation if this needs
-  to scale past a small `documents` table.
+- `title` and `section` are annotated with `#[SearchUsingPrefix(['title',
+  'section'])]`, matching `foo%` from the start of the string instead of
+  `%foo%` anywhere within it — not just a stylistic choice for `title`:
+  Postgres/MySQL full-text search (Scout's `plainto_tsquery`/
+  `websearch_to_tsquery` on Postgres) matches whole, stemmed words, so a
+  search-as-you-type query like "insta" would never surface a document
+  titled "Installation" under full-text. `section` is a short category
+  label ("Getting Started"), so matching from the start is both more
+  intuitive and — backed by the plain `section` index the migration
+  adds — much cheaper than an unindexable substring scan. `title` has no
+  matching index yet (a future migration, if this needs to scale past a
+  small `documents` table); on PostgreSQL specifically, a plain btree index
+  only accelerates a prefix `LIKE` under the `C` locale or a
+  `varchar_pattern_ops`/`text_pattern_ops` index — check your database's
+  collation before adding one.
 - `version_id` gets neither attribute, on purpose. It's a real column
   included solely so `->where('version_id', ...)` works the same way across
   every engine (see above) — nobody should type a version's numeric ID

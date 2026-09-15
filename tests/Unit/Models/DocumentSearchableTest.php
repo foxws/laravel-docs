@@ -44,6 +44,9 @@ it('declares database-engine search strategies on the searchable columns', funct
     $fullText = $method->getAttributes(SearchUsingFullText::class)[0]->newInstance();
     $prefix = $method->getAttributes(SearchUsingPrefix::class)[0]->newInstance();
 
-    expect($fullText->columns)->toBe(['title', 'body']);
-    expect($prefix->columns)->toBe(['section']);
+    // title is prefix, not full-text: Postgres full-text search matches
+    // whole, stemmed words, so a search-as-you-type query like "insta"
+    // would never surface a document titled "Installation".
+    expect($fullText->columns)->toBe(['body']);
+    expect($prefix->columns)->toBe(['title', 'section']);
 });
