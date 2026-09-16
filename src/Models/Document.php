@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Laravel\Scout\Attributes\SearchUsingFullText;
 use Laravel\Scout\Attributes\SearchUsingPrefix;
 use Laravel\Scout\Searchable;
@@ -98,6 +99,45 @@ class Document extends Model implements Htmlable
         }
 
         return $this->title;
+    }
+
+    /**
+     * Resolve the document's SEO description, cascading from the most
+     * specific override down to an excerpt of the rendered body.
+     */
+    public function resolveSeoDescription(int $excerptLength = 160): string
+    {
+        if (filled($description = $this->seo['description'] ?? null)) {
+            return self::normalizeText($description);
+        }
+
+        if (filled($description = $this->version->project->seo['description'] ?? null)) {
+            return self::normalizeText($description);
+        }
+
+        if (filled($description = config('docs.seo.description'))) {
+            return self::normalizeText($description);
+        }
+
+        return self::normalizeText($this->toHtml(), stripTags: true, limit: $excerptLength);
+    }
+
+    /**
+     * Collapse whitespace (a multi-line YAML scalar, or block-level HTML
+     * tags once stripped, can otherwise leave stray newlines/runs of
+     * spaces), optionally stripping HTML tags and truncating first.
+     */
+    private static function normalizeText(string $value, bool $stripTags = false, ?int $limit = null): string
+    {
+        $text = Str::of($value);
+
+        if ($stripTags) {
+            $text = $text->stripTags();
+        }
+
+        $text = $text->squish();
+
+        return $limit === null ? $text->toString() : $text->limit($limit)->toString();
     }
 
     /**

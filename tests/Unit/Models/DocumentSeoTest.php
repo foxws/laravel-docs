@@ -52,3 +52,67 @@ it('falls back to the bare title when no pattern is configured', function () {
 
     expect($document->resolveSeoTitle())->toBe('Installation');
 });
+
+it('resolves the seo description from the document override first', function () {
+    $document = makeDocumentForSeo(
+        documentSeo: ['description' => 'Document description'],
+        projectSeo: ['description' => 'Should not win'],
+    );
+
+    expect($document->resolveSeoDescription())->toBe('Document description');
+});
+
+it('falls back to the project seo description', function () {
+    $document = makeDocumentForSeo(
+        documentSeo: null,
+        projectSeo: ['description' => 'Project description'],
+    );
+
+    expect($document->resolveSeoDescription())->toBe('Project description');
+});
+
+it('falls back to the global config seo description', function () {
+    config()->set('docs.seo.description', 'Global description');
+
+    $document = makeDocumentForSeo(documentSeo: null, projectSeo: null);
+
+    expect($document->resolveSeoDescription())->toBe('Global description');
+});
+
+it('treats a blank seo description as unset and falls through to the next tier', function () {
+    $document = makeDocumentForSeo(
+        documentSeo: ['description' => '   '],
+        projectSeo: ['description' => 'Project description'],
+    );
+
+    expect($document->resolveSeoDescription())->toBe('Project description');
+});
+
+it('collapses stray whitespace in an overridden description', function () {
+    $document = makeDocumentForSeo(
+        documentSeo: ['description' => "Install the package,\n  then publish   the config."],
+        projectSeo: null,
+    );
+
+    expect($document->resolveSeoDescription())->toBe('Install the package, then publish the config.');
+});
+
+it('falls back to an excerpt of the rendered body when no description is configured', function () {
+    config()->set('docs.seo.description', null);
+
+    $document = makeDocumentForSeo(documentSeo: null, projectSeo: null);
+    $document->body = 'Install the package, then publish the config file.';
+
+    expect($document->resolveSeoDescription())->toBe('Install the package, then publish the config file.');
+});
+
+it('truncates a long excerpt to the given length', function () {
+    config()->set('docs.seo.description', null);
+
+    $document = makeDocumentForSeo(documentSeo: null, projectSeo: null);
+    $document->body = str_repeat('word ', 60);
+
+    $result = $document->resolveSeoDescription(excerptLength: 20);
+
+    expect($result)->toEndWith('...');
+});

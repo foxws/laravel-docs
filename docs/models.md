@@ -138,3 +138,16 @@ non-null result:
 2. `sprintf($document->version->project->seo['title_pattern'], $document->title)`
 3. `sprintf(config('docs.seo.title_pattern'), $document->title)`
 4. `$document->title`
+
+## SEO description resolution
+
+`$document->resolveSeoDescription()` resolves the same way, stopping at
+the first non-blank result (whitespace-only front matter counts as
+unset) and collapsing internal whitespace either way:
+
+1. `$document->seo['description']`
+2. `$document->version->project->seo['description']`
+3. `config('docs.seo.description')`
+4. An excerpt of `$document->toHtml()` with tags stripped, truncated to
+   `$excerptLength` characters (160 by default — pass your own to change
+   it, e.g. `resolveSeoDescription(excerptLength: 200)`)
