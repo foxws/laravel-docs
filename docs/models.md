@@ -132,7 +132,8 @@ right table/column.
 ## SEO title resolution
 
 `$document->resolveSeoTitle()` resolves in order, stopping at the first
-non-null result:
+non-blank result (whitespace-only front matter counts as unset) and
+collapsing internal whitespace either way:
 
 1. `$document->seo['title']`
 2. `sprintf($document->version->project->seo['title_pattern'], $document->title)`
@@ -141,9 +142,7 @@ non-null result:
 
 ## SEO description resolution
 
-`$document->resolveSeoDescription()` resolves the same way, stopping at
-the first non-blank result (whitespace-only front matter counts as
-unset) and collapsing internal whitespace either way:
+`$document->resolveSeoDescription()` resolves the same way:
 
 1. `$document->seo['description']`
 2. `$document->version->project->seo['description']`

@@ -53,6 +53,24 @@ it('falls back to the bare title when no pattern is configured', function () {
     expect($document->resolveSeoTitle())->toBe('Installation');
 });
 
+it('treats a blank seo title as unset and falls through to the next tier', function () {
+    $document = makeDocumentForSeo(
+        documentSeo: ['title' => '   '],
+        projectSeo: ['title_pattern' => '%s — Foxws'],
+    );
+
+    expect($document->resolveSeoTitle())->toBe('Installation — Foxws');
+});
+
+it('collapses stray whitespace in an overridden seo title', function () {
+    $document = makeDocumentForSeo(
+        documentSeo: ['title' => "Custom\n  Title"],
+        projectSeo: null,
+    );
+
+    expect($document->resolveSeoTitle())->toBe('Custom Title');
+});
+
 it('resolves the seo description from the document override first', function () {
     $document = makeDocumentForSeo(
         documentSeo: ['description' => 'Document description'],

@@ -7,6 +7,7 @@ namespace Foxws\Docs\Models;
 use ArrayObject;
 use Foxws\Docs\Database\Factories\DocumentFactory;
 use Foxws\Docs\Support\MarkdownDocumentParser;
+use Foxws\Docs\Support\TextNormalizer;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,7 +16,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 use Laravel\Scout\Attributes\SearchUsingFullText;
 use Laravel\Scout\Attributes\SearchUsingPrefix;
 use Laravel\Scout\Searchable;
@@ -86,19 +86,19 @@ class Document extends Model implements Htmlable
      */
     public function resolveSeoTitle(): string
     {
-        if ($title = $this->seo['title'] ?? null) {
-            return $title;
+        if (filled($title = $this->seo['title'] ?? null)) {
+            return TextNormalizer::normalize($title);
         }
 
-        if ($pattern = $this->version->project->seo['title_pattern'] ?? null) {
-            return sprintf($pattern, $this->title);
+        if (filled($pattern = $this->version->project->seo['title_pattern'] ?? null)) {
+            return TextNormalizer::normalize(sprintf($pattern, $this->title));
         }
 
-        if ($pattern = config('docs.seo.title_pattern')) {
-            return sprintf($pattern, $this->title);
+        if (filled($pattern = config('docs.seo.title_pattern'))) {
+            return TextNormalizer::normalize(sprintf($pattern, $this->title));
         }
 
-        return $this->title;
+        return TextNormalizer::normalize($this->title);
     }
 
     /**
@@ -108,36 +108,18 @@ class Document extends Model implements Htmlable
     public function resolveSeoDescription(int $excerptLength = 160): string
     {
         if (filled($description = $this->seo['description'] ?? null)) {
-            return self::normalizeText($description);
+            return TextNormalizer::normalize($description);
         }
 
         if (filled($description = $this->version->project->seo['description'] ?? null)) {
-            return self::normalizeText($description);
+            return TextNormalizer::normalize($description);
         }
 
         if (filled($description = config('docs.seo.description'))) {
-            return self::normalizeText($description);
+            return TextNormalizer::normalize($description);
         }
 
-        return self::normalizeText($this->toHtml(), stripTags: true, limit: $excerptLength);
-    }
-
-    /**
-     * Collapse whitespace (a multi-line YAML scalar, or block-level HTML
-     * tags once stripped, can otherwise leave stray newlines/runs of
-     * spaces), optionally stripping HTML tags and truncating first.
-     */
-    private static function normalizeText(string $value, bool $stripTags = false, ?int $limit = null): string
-    {
-        $text = Str::of($value);
-
-        if ($stripTags) {
-            $text = $text->stripTags();
-        }
-
-        $text = $text->squish();
-
-        return $limit === null ? $text->toString() : $text->limit($limit)->toString();
+        return TextNormalizer::normalize($this->toHtml(), stripTags: true, limit: $excerptLength);
     }
 
     /**
