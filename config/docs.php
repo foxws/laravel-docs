@@ -76,6 +76,33 @@ return [
          * project has accumulated a large backlog.
          */
         'prune_chunk_size' => env('DOCS_PRUNE_CHUNK_SIZE', 50),
+
+        'queue' => [
+            /*
+             * When enabled, docs:sync dispatches each project's sync as a
+             * chained queue job (one after another, never in parallel)
+             * instead of running inline. Override for a single run with
+             * --queue or --sync regardless of this setting.
+             */
+            'enabled' => env('DOCS_SYNC_QUEUED', false),
+
+            /*
+             * Connection/queue name the chained jobs are dispatched on.
+             * Leave null to use the application's default.
+             */
+            'connection' => env('DOCS_SYNC_QUEUE_CONNECTION'),
+            'queue' => env('DOCS_SYNC_QUEUE'),
+
+            /*
+             * Overlap protection for a project's queued sync job (see
+             * SyncProjectDocuments::middleware()): how long, in seconds, a
+             * duplicate dispatch waits before retrying (overlap_release_after),
+             * and the maximum a lock is trusted before being force-expired
+             * if a worker dies mid-job without releasing it (overlap_expires_after).
+             */
+            'overlap_release_after' => env('DOCS_SYNC_QUEUE_OVERLAP_RELEASE_AFTER', 30),
+            'overlap_expires_after' => env('DOCS_SYNC_QUEUE_OVERLAP_EXPIRES_AFTER', 600),
+        ],
     ],
 
     'github' => [

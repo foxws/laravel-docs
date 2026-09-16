@@ -43,3 +43,29 @@ Schedule::command('docs:sync')->daily();
 ```
 
 There is no webhook listener — sync is manual or scheduled only.
+
+## Queued syncing
+
+By default `docs:sync` runs inline and blocks until every project has
+synced. Pass `--queue` to dispatch it instead, or set
+`docs.sync.queue.enabled` to `true` to make queuing the default for every
+run (use `--sync` on a given run to force an inline run regardless):
+
+```bash
+php artisan docs:sync --queue
+```
+
+This chains one `SyncProjectDocuments` job per project, followed by a job
+that rebuilds the search index once every project has synced. Chained jobs
+run one at a time, in that order — never in parallel — regardless of how
+many queue workers are running, so projects never compete for the same
+GitHub API rate limit.
+
+Each project's job is protected against overlapping with another sync of
+the *same* project (e.g. an overlapping schedule run, or `docs:sync
+--queue` invoked twice before the first finishes) — a duplicate is released
+back onto the queue to retry instead of running alongside the first. Tune
+this via `docs.sync.queue.overlap_release_after` /
+`docs.sync.queue.overlap_expires_after`, and the connection/queue name jobs
+are dispatched on via `docs.sync.queue.connection` / `docs.sync.queue.queue`
+— see [configuration.md](configuration.md).
