@@ -2,6 +2,17 @@
 
 All notable changes to `laravel-docs` will be documented in this file.
 
+## v1.3.0 - 2026-09-16
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Enhancements
+
+* Add Document::resolveSeoDescription() by @francoism90 in https://github.com/foxws/laravel-docs/pull/18
+
+**Full Changelog**: https://github.com/foxws/laravel-docs/compare/v1.2.0...v1.3.0
+
 ## v1.2.0 - 2026-09-16
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
