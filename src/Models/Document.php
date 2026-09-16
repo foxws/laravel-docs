@@ -7,6 +7,7 @@ namespace Foxws\Docs\Models;
 use ArrayObject;
 use Foxws\Docs\Database\Factories\DocumentFactory;
 use Foxws\Docs\Support\MarkdownDocumentParser;
+use Foxws\Docs\Support\TextNormalizer;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -85,19 +86,40 @@ class Document extends Model implements Htmlable
      */
     public function resolveSeoTitle(): string
     {
-        if ($title = $this->seo['title'] ?? null) {
-            return $title;
+        if (filled($title = $this->seo['title'] ?? null)) {
+            return TextNormalizer::normalize($title);
         }
 
-        if ($pattern = $this->version->project->seo['title_pattern'] ?? null) {
-            return sprintf($pattern, $this->title);
+        if (filled($pattern = $this->version->project->seo['title_pattern'] ?? null)) {
+            return TextNormalizer::normalize(sprintf($pattern, $this->title));
         }
 
-        if ($pattern = config('docs.seo.title_pattern')) {
-            return sprintf($pattern, $this->title);
+        if (filled($pattern = config('docs.seo.title_pattern'))) {
+            return TextNormalizer::normalize(sprintf($pattern, $this->title));
         }
 
-        return $this->title;
+        return TextNormalizer::normalize($this->title);
+    }
+
+    /**
+     * Resolve the document's SEO description, cascading from the most
+     * specific override down to an excerpt of the rendered body.
+     */
+    public function resolveSeoDescription(int $excerptLength = 160): string
+    {
+        if (filled($description = $this->seo['description'] ?? null)) {
+            return TextNormalizer::normalize($description);
+        }
+
+        if (filled($description = $this->version->project->seo['description'] ?? null)) {
+            return TextNormalizer::normalize($description);
+        }
+
+        if (filled($description = config('docs.seo.description'))) {
+            return TextNormalizer::normalize($description);
+        }
+
+        return TextNormalizer::normalize($this->toHtml(), stripTags: true, limit: $excerptLength);
     }
 
     /**

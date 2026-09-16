@@ -60,6 +60,25 @@ it('creates new documents from a fresh project', function () {
     expect($installation->blob_sha)->toBe('blob-sha-a');
 });
 
+it('collapses stray whitespace in a front matter title and section', function () {
+    fakeVersion();
+
+    $rawContent = "---\ntitle: \"Getting\\n  Started\"\nsection: \"Getting\\n  Started\"\norder: 1\n---\n\n# Getting Started";
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/main*' => Http::response(fakeTreeResponse([
+            ['path' => 'docs/getting-started.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-a', 'size' => 512, 'url' => '...'],
+        ]), 200),
+        'raw.githubusercontent.com/foxws/example/main/docs/getting-started.md' => Http::response($rawContent, 200),
+    ]);
+
+    $this->artisan('docs:sync')->assertSuccessful();
+
+    $document = Document::query()->where('source_path', 'docs/getting-started.md')->firstOrFail();
+    expect($document->title)->toBe('Getting Started');
+    expect($document->section)->toBe('Getting Started');
+});
+
 it('updates a document when its blob sha changes', function () {
     $version = fakeVersion();
     $version->documents()->create([

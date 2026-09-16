@@ -9,6 +9,7 @@ use Foxws\Docs\Models\Document;
 use Foxws\Docs\Models\Version;
 use Foxws\Docs\Support\DocsClientResolver;
 use Foxws\Docs\Support\MarkdownDocumentParser;
+use Foxws\Docs\Support\TextNormalizer;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -77,14 +78,26 @@ final class SyncVersionDocuments
             $parsed = $this->parser->parse($raw);
             $stem = Str::of($entry['path'])->afterLast('/')->beforeLast('.md');
 
+            // A YAML folded/literal scalar in front matter can carry stray
+            // newlines or runs of spaces — squish before it's stored, so
+            // every downstream consumer (page <title>, nav, breadcrumbs,
+            // search index) sees clean text without normalizing it itself.
+            $title = filled($parsed->frontMatter['title'] ?? null)
+                ? TextNormalizer::normalize($parsed->frontMatter['title'])
+                : $stem->headline()->toString();
+
+            $section = filled($parsed->frontMatter['section'] ?? null)
+                ? TextNormalizer::normalize($parsed->frontMatter['section'])
+                : null;
+
             $version->documents()->updateOrCreate(
                 ['source_path' => $entry['path']],
                 [
                     'slug' => $parsed->frontMatter['slug'] ?? $stem->toString(),
-                    'title' => $parsed->frontMatter['title'] ?? $stem->headline()->toString(),
+                    'title' => $title,
                     'body' => $parsed->markdown,
                     'order' => $parsed->frontMatter['order'] ?? 0,
-                    'section' => $parsed->frontMatter['section'] ?? null,
+                    'section' => $section,
                     'blob_sha' => $entry['sha'],
                     'searchable' => $parsed->frontMatter['searchable'] ?? true,
                     'seo' => $parsed->frontMatter['seo'] ?? null,
