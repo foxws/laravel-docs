@@ -104,8 +104,13 @@ class Document extends Model implements Htmlable
     /**
      * Resolve the document's SEO description, cascading from the most
      * specific override down to an excerpt of the rendered body.
+     *
+     * $html overrides the excerpt's source — pass your own pre-rendered
+     * markup (e.g. with a leading heading already stripped, or
+     * cross-reference links already rewritten) instead of the default
+     * $this->toHtml(). Only consulted once every override tier is blank.
      */
-    public function resolveSeoDescription(int $excerptLength = 160): string
+    public function resolveSeoDescription(int $excerptLength = 160, ?string $html = null): string
     {
         if (filled($description = $this->seo['description'] ?? null)) {
             return TextNormalizer::normalize($description);
@@ -119,7 +124,7 @@ class Document extends Model implements Htmlable
             return TextNormalizer::normalize($description);
         }
 
-        return TextNormalizer::normalize($this->toHtml(), stripTags: true, limit: $excerptLength);
+        return TextNormalizer::normalize($html ?? $this->toHtml(), stripTags: true, limit: $excerptLength);
     }
 
     /**
