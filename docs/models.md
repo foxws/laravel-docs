@@ -147,6 +147,9 @@ collapsing internal whitespace either way:
 1. `$document->seo['description']`
 2. `$document->version->project->seo['description']`
 3. `config('docs.seo.description')`
-4. An excerpt of `$document->toHtml()` with tags stripped, truncated to
-   `$excerptLength` characters (160 by default — pass your own to change
-   it, e.g. `resolveSeoDescription(excerptLength: 200)`)
+4. An excerpt of `$html` (or `$document->toHtml()` if you don't pass one)
+   with tags stripped, truncated to `$excerptLength` characters (160 by
+   default). Pass your own pre-rendered markup here — e.g. with a leading
+   heading already stripped, or cross-reference links already rewritten —
+   instead of the raw, unprocessed body:
+   `resolveSeoDescription(excerptLength: 200, html: $myRenderedHtml)`

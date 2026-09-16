@@ -124,6 +124,17 @@ it('falls back to an excerpt of the rendered body when no description is configu
     expect($document->resolveSeoDescription())->toBe('Install the package, then publish the config file.');
 });
 
+it('excerpts the given html instead of toHtml() when no description is configured', function () {
+    config()->set('docs.seo.description', null);
+
+    $document = makeDocumentForSeo(documentSeo: null, projectSeo: null);
+    $document->body = 'This body should be ignored in favor of the given html.';
+
+    $result = $document->resolveSeoDescription(html: '<p>Pre-rendered excerpt source.</p>');
+
+    expect($result)->toBe('Pre-rendered excerpt source.');
+});
+
 it('truncates a long excerpt to the given length', function () {
     config()->set('docs.seo.description', null);
 
