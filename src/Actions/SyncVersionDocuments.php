@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Foxws\Docs\Actions;
 
 use Foxws\Docs\Contracts\DocsClient;
+use Foxws\Docs\Exceptions\EmptySourceTreeException;
 use Foxws\Docs\Models\Document;
 use Foxws\Docs\Models\Version;
 use Foxws\Docs\Support\DocsClientResolver;
@@ -23,6 +24,13 @@ final class SyncVersionDocuments
     /**
      * Prunes documents no longer present at the source, then upserts
      * changed/new ones. Only marks the version synced if both succeed.
+     *
+     * @throws EmptySourceTreeException if the source returns a completely
+     *                                  empty raw tree — deliberately narrower than "no *docs* entries
+     *                                  matched" (see filterDocEntries): a repo can legitimately remove
+     *                                  all of its own docs/*.md files while still returning a populated
+     *                                  tree. Callers decide the policy (skip and continue vs. abort);
+     *                                  see SyncDocsCommand/SyncProjectDocuments.
      */
     public function handle(Version $version): void
     {
@@ -30,6 +38,11 @@ final class SyncVersionDocuments
         $client = $this->clients->forProject($project);
 
         $tree = $client->fetchTree($project->sourceLocation(), $version->ref);
+
+        if ($tree['tree'] === []) {
+            throw new EmptySourceTreeException($version);
+        }
+
         $entries = $client->filterDocEntries($tree['tree'], $project->docs_path);
 
         $this->pruneMissing($version, $entries->pluck('path'));

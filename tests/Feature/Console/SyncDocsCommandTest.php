@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use Foxws\Docs\Exceptions\EmptySourceTreeException;
 use Foxws\Docs\Models\Document;
 use Foxws\Docs\Models\Project;
 use Foxws\Docs\Models\Version;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 
 function fakeTreeResponse(array $entries, string $sha = 'root-tree-sha'): array
@@ -165,6 +167,39 @@ it('does not prune when prune_missing is disabled', function () {
     $this->artisan('docs:sync')->assertSuccessful();
 
     $this->assertDatabaseCount('documents', 1);
+});
+
+it('skips a version instead of pruning it when the raw git tree comes back completely empty', function () {
+    $version = fakeVersion(['last_synced_at' => null, 'last_synced_sha' => null]);
+    $version->documents()->create([
+        'slug' => 'installation',
+        'title' => 'Installation',
+        'body' => 'still here',
+        'source_path' => 'docs/installation.md',
+        'blob_sha' => 'installation-sha',
+    ]);
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/main*' => Http::response([
+            'sha' => 'root-tree-sha',
+            'tree' => [],
+            'truncated' => false,
+        ], 200),
+    ]);
+
+    Exceptions::fake();
+
+    $this->artisan('docs:sync')
+        ->expectsOutputToContain('SKIPPED')
+        ->assertSuccessful();
+
+    $this->assertDatabaseCount('documents', 1);
+
+    $version->refresh();
+    expect($version->last_synced_at)->toBeNull();
+    expect($version->last_synced_sha)->toBeNull();
+
+    Exceptions::assertReported(EmptySourceTreeException::class);
 });
 
 it('does not update last_synced_at when the sync fails partway', function () {

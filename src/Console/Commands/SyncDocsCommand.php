@@ -7,12 +7,14 @@ namespace Foxws\Docs\Console\Commands;
 use Foxws\Docs\Actions\DiscoverLatestVersion;
 use Foxws\Docs\Actions\PruneOldVersions;
 use Foxws\Docs\Actions\SyncVersionDocuments;
+use Foxws\Docs\Exceptions\EmptySourceTreeException;
 use Foxws\Docs\Jobs\SyncDocsSearchIndex;
 use Foxws\Docs\Jobs\SyncProjectDocuments;
 use Foxws\Docs\Models\Document;
 use Foxws\Docs\Models\Project;
 use Foxws\Docs\Models\Version;
 use Illuminate\Console\Command;
+use Illuminate\Console\View\TaskResult;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
 
@@ -76,7 +78,15 @@ class SyncDocsCommand extends Command
         $project->versions->each(function (Version $version) use ($project, $syncVersionDocuments) {
             $this->components->task(
                 "{$project->slug}@{$version->name}",
-                fn () => $syncVersionDocuments->handle($version),
+                function () use ($syncVersionDocuments, $version) {
+                    try {
+                        $syncVersionDocuments->handle($version);
+                    } catch (EmptySourceTreeException $e) {
+                        report($e);
+
+                        return TaskResult::Skipped->value;
+                    }
+                },
             );
         });
     }
