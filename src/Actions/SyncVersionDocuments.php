@@ -11,6 +11,7 @@ use Foxws\Docs\Support\DocsClientResolver;
 use Foxws\Docs\Support\MarkdownDocumentParser;
 use Foxws\Docs\Support\TextNormalizer;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 final class SyncVersionDocuments
@@ -30,6 +31,22 @@ final class SyncVersionDocuments
         $client = $this->clients->forProject($project);
 
         $tree = $client->fetchTree($project->sourceLocation(), $version->ref);
+
+        // An empty *raw* tree means the source client returned nothing at
+        // all for this ref — almost always a transiently stale read right
+        // after a tag/branch was just pushed, not a repository that
+        // genuinely has zero files. Trusting it would prune every existing
+        // document and stamp the version as synced with nothing to show for
+        // it, so skip this run instead; the next docs:sync retries it. This
+        // is deliberately narrower than "no *docs* entries matched" (see
+        // filterDocEntries) — a repo can legitimately have removed all of
+        // its own docs/*.md files while still returning a populated tree.
+        if ($tree['tree'] === []) {
+            Log::warning("docs:sync got an empty git tree for [{$project->slug}@{$version->name}] (ref \"{$version->ref}\") — skipping this run instead of pruning its documents; it will retry on the next docs:sync.");
+
+            return;
+        }
+
         $entries = $client->filterDocEntries($tree['tree'], $project->docs_path);
 
         $this->pruneMissing($version, $entries->pluck('path'));
