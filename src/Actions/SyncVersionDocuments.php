@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Foxws\Docs\Actions;
 
 use Foxws\Docs\Contracts\DocsClient;
+use Foxws\Docs\Exceptions\EmptySourceTreeException;
 use Foxws\Docs\Models\Document;
 use Foxws\Docs\Models\Version;
 use Foxws\Docs\Support\DocsClientResolver;
 use Foxws\Docs\Support\MarkdownDocumentParser;
 use Foxws\Docs\Support\TextNormalizer;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 final class SyncVersionDocuments
@@ -24,6 +24,13 @@ final class SyncVersionDocuments
     /**
      * Prunes documents no longer present at the source, then upserts
      * changed/new ones. Only marks the version synced if both succeed.
+     *
+     * @throws EmptySourceTreeException if the source returns a completely
+     *                                  empty raw tree — deliberately narrower than "no *docs* entries
+     *                                  matched" (see filterDocEntries): a repo can legitimately remove
+     *                                  all of its own docs/*.md files while still returning a populated
+     *                                  tree. Callers decide the policy (skip and continue vs. abort);
+     *                                  see SyncDocsCommand/SyncProjectDocuments.
      */
     public function handle(Version $version): void
     {
@@ -32,19 +39,8 @@ final class SyncVersionDocuments
 
         $tree = $client->fetchTree($project->sourceLocation(), $version->ref);
 
-        // An empty *raw* tree means the source client returned nothing at
-        // all for this ref — almost always a transiently stale read right
-        // after a tag/branch was just pushed, not a repository that
-        // genuinely has zero files. Trusting it would prune every existing
-        // document and stamp the version as synced with nothing to show for
-        // it, so skip this run instead; the next docs:sync retries it. This
-        // is deliberately narrower than "no *docs* entries matched" (see
-        // filterDocEntries) — a repo can legitimately have removed all of
-        // its own docs/*.md files while still returning a populated tree.
         if ($tree['tree'] === []) {
-            Log::warning("docs:sync got an empty git tree for [{$project->slug}@{$version->name}] (ref \"{$version->ref}\") — skipping this run instead of pruning its documents; it will retry on the next docs:sync.");
-
-            return;
+            throw new EmptySourceTreeException($version);
         }
 
         $entries = $client->filterDocEntries($tree['tree'], $project->docs_path);

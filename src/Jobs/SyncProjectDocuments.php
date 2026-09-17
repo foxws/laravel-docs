@@ -7,6 +7,7 @@ namespace Foxws\Docs\Jobs;
 use Foxws\Docs\Actions\DiscoverLatestVersion;
 use Foxws\Docs\Actions\PruneOldVersions;
 use Foxws\Docs\Actions\SyncVersionDocuments;
+use Foxws\Docs\Exceptions\EmptySourceTreeException;
 use Foxws\Docs\Models\Project;
 use Foxws\Docs\Models\Version;
 use Illuminate\Bus\Queueable;
@@ -56,8 +57,12 @@ final class SyncProjectDocuments implements ShouldQueue
         $discoverLatestVersion->handle($project);
         $pruneOldVersions->handle($project);
 
-        $project->versions->each(
-            fn (Version $version) => $syncVersionDocuments->handle($version),
-        );
+        $project->versions->each(function (Version $version) use ($syncVersionDocuments) {
+            try {
+                $syncVersionDocuments->handle($version);
+            } catch (EmptySourceTreeException $e) {
+                report($e);
+            }
+        });
     }
 }

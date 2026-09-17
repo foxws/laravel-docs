@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
+use Foxws\Docs\Exceptions\EmptySourceTreeException;
 use Foxws\Docs\Jobs\SyncProjectDocuments;
 use Foxws\Docs\Models\Document;
 use Foxws\Docs\Models\Project;
 use Foxws\Docs\Models\Version;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
@@ -35,6 +37,28 @@ it('syncs every version of the project matching its slug', function () {
 
     $document = Document::query()->where('source_path', 'docs/installation.md')->firstOrFail();
     expect($document->title)->toBe('Installation');
+});
+
+it('reports and continues instead of failing the job when a version\'s raw git tree comes back completely empty', function () {
+    $project = Project::factory()->create(['slug' => 'example', 'github_repository' => 'foxws/example']);
+    $version = Version::factory()->create(['project_id' => $project->id, 'ref' => 'main']);
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/main*' => Http::response([
+            'sha' => 'root-tree-sha',
+            'tree' => [],
+            'truncated' => false,
+        ], 200),
+    ]);
+
+    Exceptions::fake();
+
+    $this->app->call([new SyncProjectDocuments('example'), 'handle']);
+
+    $version->refresh();
+    expect($version->last_synced_at)->toBeNull();
+
+    Exceptions::assertReported(EmptySourceTreeException::class);
 });
 
 it('no-ops when the project slug no longer resolves to a registered project', function () {
