@@ -2,6 +2,17 @@
 
 All notable changes to `laravel-docs` will be documented in this file.
 
+## v1.3.2 - 2026-09-17
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Bug Fixes
+
+* fix: don't prune/mark synced on an empty raw git tree by @francoism90 in https://github.com/foxws/laravel-docs/pull/20
+
+**Full Changelog**: https://github.com/foxws/laravel-docs/compare/v1.3.1...v1.3.2
+
 ## v1.3.1 - 2026-09-16
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
