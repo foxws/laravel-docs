@@ -107,6 +107,18 @@ return [
 
     'github' => [
         'token' => env('DOCS_GITHUB_TOKEN'),
+
+        /*
+         * GitHub's Trees API and the raw.githubusercontent.com CDN can both
+         * briefly lag right after a ref is pushed/tagged, 404ing a file
+         * that exists at the source. Each request is retried this many
+         * times, waiting this long between attempts, before the sync gives
+         * up on it. Set times to 1 to disable retrying.
+         */
+        'retry' => [
+            'times' => env('DOCS_GITHUB_RETRY_TIMES', 3),
+            'sleep_milliseconds' => env('DOCS_GITHUB_RETRY_SLEEP_MILLISECONDS', 500),
+        ],
     ],
 
     'cache' => [

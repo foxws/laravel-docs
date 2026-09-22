@@ -18,6 +18,9 @@ final class GitHubDocsClient implements DocsClient
      * tag, or SHA) via the GitHub Trees API (authenticated, for the higher
      * rate limit).
      *
+     * Retried with backoff (see fetchRawContent()'s note on why) — a ref
+     * that was only just pushed/tagged can briefly 404 here too.
+     *
      * @return array{sha: string, tree: array<int, array{path: string, sha: string, type: string}>}
      */
     public function fetchTree(string $repository, string $ref): array
@@ -26,6 +29,7 @@ final class GitHubDocsClient implements DocsClient
             config('docs.github.token'),
             fn (PendingRequest $http, string $token) => $http->withToken($token),
         )
+            ->retry(config('docs.github.retry.times'), config('docs.github.retry.sleep_milliseconds'))
             ->get("https://api.github.com/repos/{$repository}/git/trees/{$ref}", [
                 'recursive' => 1,
             ])
@@ -36,10 +40,17 @@ final class GitHubDocsClient implements DocsClient
     /**
      * Fetch a file's raw content from the CDN-cached, unauthenticated
      * raw.githubusercontent.com endpoint (doesn't touch the API rate limit).
+     *
+     * Retried with backoff: right after a new ref is pushed/tagged, the edge
+     * cache serving this endpoint can lag behind and 404 a file that exists
+     * at the source, which would otherwise get synced in as missing/empty
+     * and then never retried — the git blob sha upsertChanged() compares
+     * against next time doesn't change for an immutable ref.
      */
     public function fetchRawContent(string $repository, string $ref, string $path): string
     {
-        return Http::get("https://raw.githubusercontent.com/{$repository}/{$ref}/{$path}")
+        return Http::retry(config('docs.github.retry.times'), config('docs.github.retry.sleep_milliseconds'))
+            ->get("https://raw.githubusercontent.com/{$repository}/{$ref}/{$path}")
             ->throw()
             ->body();
     }

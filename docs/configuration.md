@@ -31,3 +31,5 @@ Projects and versions are registered via the `docs:projects:add` /
 | `sync.queue.overlap_release_after` | Seconds a duplicate sync of the same project waits before retrying when it can't acquire the overlap lock. Defaults to `env('DOCS_SYNC_QUEUE_OVERLAP_RELEASE_AFTER', 30)`. |
 | `sync.queue.overlap_expires_after` | Maximum seconds a project's overlap lock is trusted before being force-expired, e.g. if a worker dies mid-job without releasing it. Defaults to `env('DOCS_SYNC_QUEUE_OVERLAP_EXPIRES_AFTER', 600)`. |
 | `github.token` | A GitHub personal access token, used only for the authenticated Trees API call (`env('DOCS_GITHUB_TOKEN')`). Raw content fetches are unauthenticated. |
+| `github.retry.times` | How many times to retry a Trees API or raw content request that fails — a ref pushed/tagged moments ago can briefly 404 on either before it propagates. Set to `1` to disable retrying. Defaults to `env('DOCS_GITHUB_RETRY_TIMES', 3)`. |
+| `github.retry.sleep_milliseconds` | Milliseconds to wait between retry attempts. Defaults to `env('DOCS_GITHUB_RETRY_SLEEP_MILLISECONDS', 500)`. |
