@@ -2,6 +2,17 @@
 
 All notable changes to `laravel-docs` will be documented in this file.
 
+## v1.3.4 - 2026-09-25
+
+<!-- Release notes generated using configuration in .github/release.yml at ae76d8babcb152ca3981289ea6ef7f8bad4429e2 -->
+### What's Changed
+
+#### Other Changes
+
+* fix: store front matter slugs without surrounding slashes by @francoism90 in https://github.com/foxws/laravel-docs/pull/22
+
+**Full Changelog**: https://github.com/foxws/laravel-docs/compare/v1.3.3...v1.3.4
+
 ## v1.3.3 - 2026-09-22
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
