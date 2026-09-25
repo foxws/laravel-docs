@@ -150,6 +150,11 @@ seo:
 All fields are optional. `slug`/`title` fall back to the file's name when
 omitted; `order` defaults to `0`; `searchable` defaults to `true`.
 
+A `slug` is stored without leading or trailing slashes, so the same files
+can also feed a static site generator: `slug: /intro` is stored as `intro`,
+and `slug: /` (Docusaurus' docs root) falls back to the file's name, like
+`index` for `index.md`.
+
 ## Project metadata
 
 Add a `metadata:` block to your **index document**'s front matter
