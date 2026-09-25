@@ -81,6 +81,26 @@ it('collapses stray whitespace in a front matter title and section', function ()
     expect($document->section)->toBe('Getting Started');
 });
 
+it('stores the front matter slug without surrounding slashes', function (string $frontMatterSlug, string $expected) {
+    fakeVersion();
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/main*' => Http::response(fakeTreeResponse([
+            ['path' => 'docs/index.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-a', 'size' => 512, 'url' => '...'],
+        ]), 200),
+        'raw.githubusercontent.com/foxws/example/main/docs/index.md' => Http::response("---\nslug: {$frontMatterSlug}\n---\n\n# Introduction", 200),
+    ]);
+
+    $this->artisan('docs:sync')->assertSuccessful();
+
+    expect(Document::query()->where('source_path', 'docs/index.md')->value('slug'))->toBe($expected);
+})->with([
+    'the docs root falls back to the file name' => ['/', 'index'],
+    'a leading slash' => ['/introduction', 'introduction'],
+    'a trailing slash' => ['introduction/', 'introduction'],
+    'no slashes' => ['introduction', 'introduction'],
+]);
+
 it('updates a document when its blob sha changes', function () {
     $version = fakeVersion();
     $version->documents()->create([

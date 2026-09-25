@@ -106,7 +106,7 @@ final class SyncVersionDocuments
             $version->documents()->updateOrCreate(
                 ['source_path' => $entry['path']],
                 [
-                    'slug' => $parsed->frontMatter['slug'] ?? $stem->toString(),
+                    'slug' => $this->resolveSlug($parsed->frontMatter['slug'] ?? null, $stem->toString()),
                     'title' => $title,
                     'body' => $parsed->markdown,
                     'order' => $parsed->frontMatter['order'] ?? 0,
@@ -121,5 +121,17 @@ final class SyncVersionDocuments
                 $project->update(['metadata' => $parsed->frontMatter['metadata'] ?? null]);
             }
         }
+    }
+
+    /**
+     * Front matter slugs are often written as site paths for a static site
+     * generator — Docusaurus uses `slug: /` for the docs root — so trim
+     * the slashes, and fall back to the file name when nothing is left.
+     */
+    private function resolveSlug(mixed $slug, string $fileName): string
+    {
+        $slug = is_scalar($slug) ? trim((string) $slug, '/') : '';
+
+        return $slug !== '' ? $slug : $fileName;
     }
 }
