@@ -68,7 +68,10 @@ The command matches on `name` within the project — running it again updates
 that version's `ref`. Passing `--default` marks it as the project's default,
 unmarking whichever version was default before (only one version per
 project can be default at a time). Omitting `--default` on a re-run leaves
-the current default unchanged. Each version syncs independently from its
+the current default unchanged. If no version is marked default, the most
+recently registered one is used, and removing the default version with
+`docs:versions:remove` marks the most recently registered remaining version
+as the new default. Each version syncs independently from its
 own `ref` and tracks its own `last_synced_at`/`last_synced_sha`.
 
 Once at least one version is registered, run `docs:sync` (see

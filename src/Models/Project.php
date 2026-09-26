@@ -170,11 +170,11 @@ class Project extends Model
 
     /**
      * This project's version to read from absent a more specific choice —
-     * the one marked default, or the first registered if none is.
+     * the one marked default, or the most recently registered if none is.
      */
     public function defaultVersion(): ?Version
     {
-        return $this->versions->firstWhere('is_default', true) ?? $this->versions->first();
+        return $this->versions->firstWhere('is_default', true) ?? $this->versions->sortByDesc('id')->first();
     }
 
     /**
