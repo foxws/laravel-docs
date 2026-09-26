@@ -24,6 +24,36 @@ it('removes a version and its documents', function () {
     $this->assertDatabaseCount('documents', 1);
 });
 
+it('marks the newest remaining version as default when removing the default version', function () {
+    $project = Project::factory()->create(['slug' => 'laravel-podman']);
+    $newer = Version::factory()->create(['project_id' => $project->id, 'name' => '2.3.1', 'is_default' => false]);
+    $older = Version::factory()->create(['project_id' => $project->id, 'name' => '2.2.1', 'is_default' => false]);
+    Version::factory()->create(['project_id' => $project->id, 'name' => 'latest', 'is_default' => true]);
+
+    $this->artisan('docs:versions:remove', [
+        'project' => 'laravel-podman',
+        'name' => 'latest',
+        '--force' => true,
+    ])->assertSuccessful();
+
+    expect($newer->refresh()->is_default)->toBeTrue()
+        ->and($older->refresh()->is_default)->toBeFalse();
+});
+
+it('leaves the default untouched when removing a non-default version', function () {
+    $project = Project::factory()->create(['slug' => 'laravel-podman']);
+    $default = Version::factory()->create(['project_id' => $project->id, 'name' => '1.0.0', 'is_default' => true]);
+    $other = Version::factory()->create(['project_id' => $project->id, 'name' => '2.0.0', 'is_default' => false]);
+
+    $this->artisan('docs:versions:remove', [
+        'project' => 'laravel-podman',
+        'name' => '2.0.0',
+        '--force' => true,
+    ])->assertSuccessful();
+
+    expect($default->refresh()->is_default)->toBeTrue();
+});
+
 it('asks for confirmation before removing a version', function () {
     $project = Project::factory()->create(['slug' => 'laravel-podman']);
     $version = Version::factory()->create(['project_id' => $project->id, 'name' => '1.0.0']);

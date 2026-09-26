@@ -94,11 +94,12 @@ it('builds the index document path from docs_path', function () {
     expect($project->indexDocumentPath())->toBe('docs/index.md');
 });
 
-it('resolves the default version, falling back to the first when none is marked default', function () {
+it('resolves the default version, falling back to the newest by version number when none is marked default', function () {
     $project = Project::factory()->create();
-    $first = Version::factory()->create(['project_id' => $project->id, 'is_default' => false]);
+    $newest = Version::factory()->create(['project_id' => $project->id, 'name' => '2.3.1', 'is_default' => false]);
+    Version::factory()->create(['project_id' => $project->id, 'name' => '2.2.1', 'is_default' => false]);
 
-    expect($project->refresh()->defaultVersion()->is($first))->toBeTrue();
+    expect($project->refresh()->defaultVersion()->is($newest))->toBeTrue();
 
     $default = Version::factory()->create(['project_id' => $project->id, 'is_default' => true]);
 

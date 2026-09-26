@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Foxws\Docs\Models;
 
+use Foxws\Docs\Collections\VersionCollection;
 use Foxws\Docs\Database\Factories\VersionFactory;
+use Illuminate\Database\Eloquent\Attributes\CollectedBy;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +28,7 @@ use Illuminate\Support\Carbon;
  * @property Project $project
  * @property Collection<int, Document> $documents
  */
+#[CollectedBy(VersionCollection::class)]
 class Version extends Model
 {
     /** @use HasFactory<VersionFactory> */
@@ -126,6 +129,19 @@ class Version extends Model
         $this->update(Arr::only($attributes, ['ref']));
 
         return $this;
+    }
+
+    /**
+     * This version's name as a version number — without a leading "v" —
+     * or null if the name isn't one (e.g. "latest").
+     */
+    public function versionNumber(): ?string
+    {
+        if (preg_match('/^v?(\d+(?:\.\d+)*(?:[-+.]?[0-9A-Za-z.-]+)?)$/i', $this->name, $matches) !== 1) {
+            return null;
+        }
+
+        return $matches[1];
     }
 
     /**
