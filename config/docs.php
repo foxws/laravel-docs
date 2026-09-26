@@ -23,8 +23,8 @@ return [
      * Package-wide default SEO, used when a project/document doesn't override it.
      */
     'seo' => [
-        'title_pattern' => '%s — '.env('APP_NAME', 'Laravel'),
-        'description' => '',
+        'title_pattern' => env('DOCS_SEO_TITLE_PATTERN', '%s — '.env('APP_NAME', 'Laravel')),
+        'description' => env('DOCS_SEO_DESCRIPTION', ''),
     ],
 
     'markdown' => [
