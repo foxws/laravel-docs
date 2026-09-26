@@ -16,10 +16,10 @@ Projects and versions are registered via the `docs:projects:add` /
 | `models.project` | The `Project` model class to use. Override to your own subclass — see [models.md](models.md#customizing-the-models). |
 | `models.version` | The `Version` model class to use. Override to your own subclass — see [models.md](models.md#customizing-the-models). |
 | `models.document` | The `Document` model class to use. Override to your own subclass — see [models.md](models.md#customizing-the-models). |
-| `seo.title_pattern` | Package-wide `sprintf`-style fallback for `Document::resolveSeoTitle()`, e.g. `'%s — Foxws'`. |
-| `seo.description` | Package-wide fallback for `Document::resolveSeoDescription()`. |
+| `seo.title_pattern` | Package-wide `sprintf`-style fallback for `Document::resolveSeoTitle()`. Defaults to `env('DOCS_SEO_TITLE_PATTERN', '%s — '.env('APP_NAME', 'Laravel'))`. |
+| `seo.description` | Package-wide fallback for `Document::resolveSeoDescription()`. Defaults to `env('DOCS_SEO_DESCRIPTION', '')`. |
 | `search.enabled` | Whether documents are indexed via Scout at all. Defaults to `env('DOCS_SEARCH_ENABLED', true)`. |
-| `search.index_prefix` | Prefix applied to the Scout index name. Defaults to `env('DOCS_SEARCH_PREFIX', 'foxws_')`. |
+| `search.index_prefix` | Prefix applied to the Scout index name. Defaults to `env('DOCS_SEARCH_PREFIX', 'docs_')`. |
 | `sync.prune_missing` | Whether `docs:sync` deletes documents whose source file no longer exists remotely. Defaults to `env('DOCS_PRUNE_MISSING', true)`. |
 | `sync.auto_discover_versions` | Whether `docs:sync` checks each project's latest GitHub release and registers it as the default version automatically. Defaults to `env('DOCS_AUTO_DISCOVER_VERSIONS', true)` — see [registering-projects.md](registering-projects.md#automatic-version-discovery). |
 | `sync.requires_versions` | Whether `docs:projects:add --sync` skips registering a `latest` version tracking `main` for a GitHub project, so only explicitly registered or auto-discovered release versions are synced. Defaults to `env('DOCS_REQUIRES_VERSIONS', true)` — see [registering-projects.md](registering-projects.md#quick-start-with---sync). |
