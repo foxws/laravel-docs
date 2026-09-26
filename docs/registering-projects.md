@@ -23,7 +23,7 @@ php artisan docs:projects:add laravel-podman "Laravel Podman" --github=foxws/lar
 | `--docs-path` | `docs` | Path to the docs folder within the repository/local path. |
 | `--seo-title-pattern` | — | `sprintf`-style pattern, e.g. `"%s — Laravel Podman — Foxws"`. |
 | `--seo-description` | — | Fallback SEO description for this project's documents. |
-| `--sync` | off | Also register a `latest` version tracking `main` (marked default) and run `docs:sync --project={slug}` immediately — see [Quick start with --sync](#quick-start-with---sync). |
+| `--sync` | off | Run `docs:sync --project={slug}` immediately, first registering a `latest` version tracking `main` (marked default) unless `docs.sync.requires_versions` is enabled for a GitHub project — see [Quick start with --sync](#quick-start-with---sync). |
 
 The command matches on `slug` — running it again with the same slug updates
 that project's title/driver/repository/local path/docs_path/seo.
@@ -90,6 +90,14 @@ works the same way for a `--driver=local` project (`ref` is ignored either
 way). Re-running the command with `--sync` re-syncs that version; it doesn't
 touch any other versions you've registered for the project since.
 
+With `docs.sync.requires_versions` enabled (the default), `--sync` skips the
+`latest`/`main` version and only runs the sync — so the project is synced
+from its latest GitHub release via
+[automatic version discovery](#automatic-version-discovery), or from versions
+registered with `docs:versions:add`. A project with neither has nothing to
+sync yet. `--driver=local` projects have no releases, so they always get the
+`latest` version.
+
 ## Automatic version discovery
 
 You don't have to run `docs:versions:add` at all if you're happy always
@@ -113,6 +121,22 @@ you either publish a release or register a version manually.
 
 Set `DOCS_AUTO_DISCOVER_VERSIONS=false` to turn this off and manage versions
 entirely through `docs:versions:add`.
+
+## Removing projects and versions
+
+```bash
+php artisan docs:versions:remove laravel-podman 1.0.0
+php artisan docs:projects:remove laravel-podman
+```
+
+`docs:versions:remove` deletes a single version and its documents.
+`docs:projects:remove` deletes a project with all of its versions and
+documents. Documents are removed from the search index as well. Both ask for
+confirmation first; pass `--force` to skip it (e.g. in a script).
+
+If you remove a version that is still a project's latest GitHub release, the
+next `docs:sync` registers it again while `docs.sync.auto_discover_versions`
+is enabled.
 
 ## Retention
 

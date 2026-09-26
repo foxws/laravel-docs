@@ -108,6 +108,8 @@ it('updates an existing project matched by slug', function () {
 });
 
 it('registers a default "latest"/"main" version and syncs it immediately with --sync', function () {
+    config()->set('docs.sync.requires_versions', false);
+
     Http::fake([
         'api.github.com/repos/foxws/laravel-podman/releases/latest' => Http::response(null, 404),
         'api.github.com/repos/foxws/laravel-podman/git/trees/main*' => Http::response([
@@ -136,6 +138,78 @@ it('registers a default "latest"/"main" version and syncs it immediately with --
         ->and($version->last_synced_at)->not->toBeNull();
 
     $this->assertDatabaseCount('documents', 1);
+});
+
+it('syncs only the discovered release version with --sync when versions are required', function () {
+    config()->set('docs.sync.requires_versions', true);
+
+    Http::fake([
+        'api.github.com/repos/foxws/laravel-podman/releases/latest' => Http::response(['tag_name' => 'v2.0.0'], 200),
+        'api.github.com/repos/foxws/laravel-podman/git/trees/v2.0.0*' => Http::response([
+            'sha' => 'root-sha',
+            'tree' => [
+                ['path' => 'docs/installation.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-a', 'size' => 512, 'url' => '...'],
+            ],
+            'truncated' => false,
+        ], 200),
+        'raw.githubusercontent.com/foxws/laravel-podman/v2.0.0/docs/installation.md' => Http::response('# Installation', 200),
+    ]);
+
+    $this->artisan('docs:projects:add', [
+        'slug' => 'laravel-podman',
+        'title' => 'Laravel Podman',
+        '--github' => 'foxws/laravel-podman',
+        '--sync' => true,
+    ])->assertSuccessful();
+
+    $project = Project::query()->where('slug', 'laravel-podman')->firstOrFail();
+    $version = $project->versions()->sole();
+
+    expect($version->name)->toBe('2.0.0')
+        ->and($version->ref)->toBe('v2.0.0')
+        ->and($version->is_default)->toBeTrue()
+        ->and($version->last_synced_at)->not->toBeNull();
+
+    $this->assertDatabaseCount('documents', 1);
+});
+
+it('syncs nothing with --sync when versions are required and there is no release', function () {
+    config()->set('docs.sync.requires_versions', true);
+
+    Http::fake([
+        'api.github.com/repos/foxws/laravel-podman/releases/latest' => Http::response(null, 404),
+    ]);
+
+    $this->artisan('docs:projects:add', [
+        'slug' => 'laravel-podman',
+        'title' => 'Laravel Podman',
+        '--github' => 'foxws/laravel-podman',
+        '--sync' => true,
+    ])->assertSuccessful();
+
+    $project = Project::query()->where('slug', 'laravel-podman')->firstOrFail();
+
+    expect($project->versions)->toBeEmpty();
+
+    $this->assertDatabaseCount('documents', 0);
+});
+
+it('still registers a "latest" version for a local project with --sync when versions are required', function () {
+    config()->set('docs.sync.requires_versions', true);
+
+    $this->artisan('docs:projects:add', [
+        'slug' => 'stry',
+        'title' => 'Stry',
+        '--driver' => 'local',
+        '--local-path' => 'docs',
+        '--sync' => true,
+    ])->assertSuccessful();
+
+    $project = Project::query()->where('slug', 'stry')->firstOrFail();
+    $version = $project->versions()->sole();
+
+    expect($version->name)->toBe('latest')
+        ->and($version->is_default)->toBeTrue();
 });
 
 it('does not register a version without --sync', function () {
