@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Foxws\Docs\Console\Commands;
 
+use Foxws\Docs\Console\Concerns\InteractsWithStringInput;
 use Foxws\Docs\Models\Project;
 use Foxws\Docs\Models\Version;
 use Illuminate\Console\Command;
-use RuntimeException;
 
 class AddVersionCommand extends Command
 {
+    use InteractsWithStringInput;
+
     protected $signature = 'docs:versions:add
         {project : The project\'s slug, e.g. "laravel-podman"}
         {name : Version name, e.g. "1.0.0" or "latest"}
@@ -42,16 +44,5 @@ class AddVersionCommand extends Command
         $this->components->info("Registered version [{$project->slug}@{$version->name}]. Run `docs:sync` to pull its documentation.");
 
         return self::SUCCESS;
-    }
-
-    private function stringArgument(string $key): string
-    {
-        $value = $this->argument($key);
-
-        if (! is_string($value)) {
-            throw new RuntimeException("The [{$key}] argument must be a string.");
-        }
-
-        return $value;
     }
 }

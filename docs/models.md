@@ -122,7 +122,7 @@ class Project extends \Foxws\Docs\Models\Project
 ```
 
 Everywhere the package resolves these models internally — relations,
-`docs:projects:add`, `docs:versions:add`, `docs:sync` — it goes through
+`docs:projects:add`, `docs:versions:add`, the remove commands, `docs:sync` — it goes through
 `Project::modelClass()` / `Version::modelClass()` / `Document::modelClass()`
 rather than the hardcoded base class, so your subclass is used consistently.
 All three base models pin their `$table` and their relations' foreign keys
