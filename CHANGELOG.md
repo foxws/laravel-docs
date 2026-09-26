@@ -2,6 +2,25 @@
 
 All notable changes to `laravel-docs` will be documented in this file.
 
+## v1.5.0 - 2026-09-26
+
+#### Upgrade notes
+
+- When no version is marked default, `Project::defaultVersion()` now falls back to the newest version by version number (`1.10.0` above `1.9.0`, a leading `v` ignored), not the first registered. Names that aren't version numbers (e.g. `latest`) rank below any that are.
+- Removing the default version (`docs:versions:remove`, `DeleteVersion`) now marks the newest remaining version as the default.
+- `Version` queries now return a `Foxws\Docs\Collections\VersionCollection` (extends Eloquent's `Collection`) with a `newest()` method.
+- New commands: `docs:projects:list`, `docs:versions:list` and `docs:documents:list`.
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Other Changes
+
+* feat: add list commands for projects, versions and documents by @francoism90 in https://github.com/foxws/laravel-docs/pull/25
+* fix: fall back to the most recent version when no default is set by @francoism90 in https://github.com/foxws/laravel-docs/pull/26
+
+**Full Changelog**: https://github.com/foxws/laravel-docs/compare/v1.4.0...v1.5.0
+
 ## v1.4.0 - 2026-09-26
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
