@@ -23,8 +23,8 @@ return [
      * Package-wide default SEO, used when a project/document doesn't override it.
      */
     'seo' => [
-        'title_pattern' => '%s — Foxws',
-        'description' => '',
+        'title_pattern' => env('DOCS_SEO_TITLE_PATTERN', '%s — '.env('APP_NAME', 'Laravel')),
+        'description' => env('DOCS_SEO_DESCRIPTION', ''),
     ],
 
     'markdown' => [
@@ -41,7 +41,7 @@ return [
 
     'search' => [
         'enabled' => env('DOCS_SEARCH_ENABLED', true),
-        'index_prefix' => env('DOCS_SEARCH_PREFIX', 'foxws_'),
+        'index_prefix' => env('DOCS_SEARCH_PREFIX', 'docs_'),
     ],
 
     'sync' => [
