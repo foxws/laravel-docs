@@ -122,6 +122,25 @@ you either publish a release or register a version manually.
 Set `DOCS_AUTO_DISCOVER_VERSIONS=false` to turn this off and manage versions
 entirely through `docs:versions:add`.
 
+## Listing projects, versions and documents
+
+```bash
+php artisan docs:projects:list
+php artisan docs:versions:list
+php artisan docs:versions:list laravel-podman
+php artisan docs:documents:list
+php artisan docs:documents:list laravel-podman
+php artisan docs:documents:list laravel-podman 1.0.0
+```
+
+`docs:projects:list` shows every registered project with its driver, source,
+default version and how many versions and documents it has.
+`docs:versions:list` shows each version with its project, ref, whether it is
+the default, its document count and when (and at which commit) it was last
+synced. `docs:documents:list` shows each synced document with the project and
+version it belongs to, in reading order. Pass a project slug (and, for
+documents, a version name) to narrow the list down.
+
 ## Removing projects and versions
 
 ```bash
