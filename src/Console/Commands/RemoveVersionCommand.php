@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Foxws\Docs\Console\Commands;
 
-use Foxws\Docs\Console\Concerns\InteractsWithStringInput;
 use Foxws\Docs\Actions\DeleteVersion;
+use Foxws\Docs\Console\Concerns\InteractsWithStringInput;
 use Foxws\Docs\Models\Project;
 use Illuminate\Console\Command;
 
