@@ -12,7 +12,7 @@ final class DeleteVersion
     /**
      * Delete a version along with its documents, removing each document
      * from the search index first. Deleting the project's default version
-     * hands the default on to its most recently registered remaining one,
+     * hands the default on to its newest remaining one by version number,
      * so the project is never left without a default.
      */
     public function handle(Version $version): void
@@ -25,7 +25,7 @@ final class DeleteVersion
         $version->delete();
 
         if ($version->is_default) {
-            $version->project->versions()->latest('id')->first()?->markAsDefault();
+            $version->project->versions()->get()->newest()?->markAsDefault();
         }
     }
 }

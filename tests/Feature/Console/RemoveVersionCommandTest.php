@@ -24,10 +24,10 @@ it('removes a version and its documents', function () {
     $this->assertDatabaseCount('documents', 1);
 });
 
-it('marks the most recent remaining version as default when removing the default version', function () {
+it('marks the newest remaining version as default when removing the default version', function () {
     $project = Project::factory()->create(['slug' => 'laravel-podman']);
-    $older = Version::factory()->create(['project_id' => $project->id, 'name' => '2.2.1', 'is_default' => false]);
     $newer = Version::factory()->create(['project_id' => $project->id, 'name' => '2.3.1', 'is_default' => false]);
+    $older = Version::factory()->create(['project_id' => $project->id, 'name' => '2.2.1', 'is_default' => false]);
     Version::factory()->create(['project_id' => $project->id, 'name' => 'latest', 'is_default' => true]);
 
     $this->artisan('docs:versions:remove', [

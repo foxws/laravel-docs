@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Foxws\Docs\Models;
 
 use ArrayObject;
+use Foxws\Docs\Collections\VersionCollection;
 use Foxws\Docs\Database\Factories\ProjectFactory;
 use Foxws\Docs\Enums\ProjectDriver;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
@@ -30,7 +31,7 @@ use Illuminate\Support\Str;
  * @property ArrayObject<string, mixed>|null $metadata
  * @property Carbon $created_at
  * @property Carbon $updated_at
- * @property Collection<int, Version> $versions
+ * @property VersionCollection<int, Version> $versions
  * @property Collection<int, Document> $documents
  */
 class Project extends Model
@@ -170,11 +171,11 @@ class Project extends Model
 
     /**
      * This project's version to read from absent a more specific choice —
-     * the one marked default, or the most recently registered if none is.
+     * the one marked default, or the newest by version number if none is.
      */
     public function defaultVersion(): ?Version
     {
-        return $this->versions->firstWhere('is_default', true) ?? $this->versions->sortByDesc('id')->first();
+        return $this->versions->firstWhere('is_default', true) ?? $this->versions->newest();
     }
 
     /**
