@@ -2,6 +2,25 @@
 
 All notable changes to `laravel-docs` will be documented in this file.
 
+## v1.4.0 - 2026-09-26
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Other Changes
+
+* feat: default title pattern to app name and search prefix to docs_ by @francoism90 in https://github.com/foxws/laravel-docs/pull/23
+* feat: add requires_versions option and remove commands for projects and versions by @francoism90 in https://github.com/foxws/laravel-docs/pull/24
+
+**Full Changelog**: https://github.com/foxws/laravel-docs/compare/v1.3.4...v1.4.0
+
+#### Upgrade notes
+
+- `docs.search.index_prefix` now defaults to `docs_` (was `foxws_`). If you use an index-based Scout engine, set `DOCS_SEARCH_PREFIX=foxws_` or re-import with `php artisan scout:import "Foxws\Docs\Models\Document"`.
+- `docs.seo.title_pattern` now defaults to `'%s — '.env('APP_NAME', 'Laravel')` (was `'%s — Foxws'`). Override with `DOCS_SEO_TITLE_PATTERN`.
+- New `docs.sync.requires_versions` (default `true`): `docs:projects:add --sync` no longer registers a `latest`/`main` version for GitHub projects. Set `DOCS_REQUIRES_VERSIONS=false` to keep the old behaviour.
+- New commands: `docs:versions:remove` and `docs:projects:remove`.
+
 ## v1.3.4 - 2026-09-25
 
 <!-- Release notes generated using configuration in .github/release.yml at ae76d8babcb152ca3981289ea6ef7f8bad4429e2 -->
