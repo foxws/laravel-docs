@@ -6,6 +6,9 @@ namespace Foxws\Docs;
 
 use Foxws\Docs\Console\Commands\AddProjectCommand;
 use Foxws\Docs\Console\Commands\AddVersionCommand;
+use Foxws\Docs\Console\Commands\ListDocumentsCommand;
+use Foxws\Docs\Console\Commands\ListProjectsCommand;
+use Foxws\Docs\Console\Commands\ListVersionsCommand;
 use Foxws\Docs\Console\Commands\RemoveProjectCommand;
 use Foxws\Docs\Console\Commands\RemoveVersionCommand;
 use Foxws\Docs\Console\Commands\SyncDocsCommand;
@@ -46,6 +49,9 @@ class DocsServiceProvider extends ServiceProvider
             AddVersionCommand::class,
             RemoveProjectCommand::class,
             RemoveVersionCommand::class,
+            ListProjectsCommand::class,
+            ListVersionsCommand::class,
+            ListDocumentsCommand::class,
         ]);
     }
 }
