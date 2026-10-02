@@ -2,6 +2,7 @@
 title: Introduction
 metadata:
   role: Documentation
+  group: foundations
   eyebrow: "Data layer · Markdown · GitHub"
   desc: "Pull a package's docs/*.md folder from GitHub into queryable Eloquent models."
   requires: "PHP ^8.3"
