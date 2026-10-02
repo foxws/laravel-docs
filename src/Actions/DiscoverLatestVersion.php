@@ -18,8 +18,8 @@ final class DiscoverLatestVersion
     /**
      * Register the project's latest GitHub release as its default version.
      * No-op if auto-discovery is disabled, the project isn't GitHub-driven
-     * (a local folder has no "release" to discover), or the repository has
-     * no releases.
+     * (a local folder has no "release" to discover) or has no repository set,
+     * or the repository has no releases.
      */
     public function handle(Project $project): ?Version
     {
@@ -27,7 +27,7 @@ final class DiscoverLatestVersion
             return null;
         }
 
-        if ($project->driver !== ProjectDriver::Github) {
+        if ($project->driver !== ProjectDriver::Github || blank($project->github_repository)) {
             return null;
         }
 

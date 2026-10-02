@@ -70,6 +70,16 @@ it('does nothing when auto-discovery is disabled', function () {
     Http::assertNothingSent();
 });
 
+it('does nothing for a GitHub project without a repository', function () {
+    $project = Project::factory()->create(['github_repository' => null]);
+
+    Http::fake();
+
+    expect(app(DiscoverLatestVersion::class)->handle($project))->toBeNull();
+
+    Http::assertNothingSent();
+});
+
 it('derives the name from arbitrary prefixes via the default pattern', function () {
     config()->set('docs.sync.auto_discover_versions', true);
 
