@@ -10,9 +10,9 @@ metadata:
   laravel: "12.x / 13.x"
   licence: MIT
   used_by:
-    name: foxws.nl
-    desc: "This site. Every package's docs here come from it."
-    href: "https://foxws.nl"
+    - name: foxws.nl
+      desc: "This site. Every package's docs here come from it."
+      href: "https://foxws.nl"
 ---
 
 # Introduction
