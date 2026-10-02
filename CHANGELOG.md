@@ -2,6 +2,18 @@
 
 All notable changes to `laravel-docs` will be documented in this file.
 
+## v1.5.1 - 2026-10-02
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Other Changes
+
+* docs: add the foxws.nl homepage group, a hero lead and a clearer introduction by @francoism90 in https://github.com/foxws/laravel-docs/pull/27
+* Raise PHPStan to level 8, and skip discovery for projects without a repository by @francoism90 in https://github.com/foxws/laravel-docs/pull/29
+
+**Full Changelog**: https://github.com/foxws/laravel-docs/compare/v1.5.0...v1.5.1
+
 ## v1.5.0 - 2026-09-26
 
 #### Upgrade notes
