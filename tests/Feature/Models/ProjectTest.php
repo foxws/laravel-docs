@@ -101,7 +101,7 @@ it('resolves the default version, falling back to the newest by version number w
 
     expect($project->refresh()->defaultVersion()->is($newest))->toBeTrue();
 
-    $default = Version::factory()->create(['project_id' => $project->id, 'is_default' => true]);
+    $default = Version::factory()->create(['project_id' => $project->id, 'name' => '1.0.0', 'is_default' => true]);
 
     expect($project->refresh()->defaultVersion()->is($default))->toBeTrue();
 });
