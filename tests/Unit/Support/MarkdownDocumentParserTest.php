@@ -80,3 +80,25 @@ it('merges per-call options over the configured defaults', function () {
 
     expect($html)->toContain('<em>hi</em>');
 });
+
+it('renders callout blocks', function () {
+    $html = (new MarkdownDocumentParser)->renderAsHtml(":::note\nAll buckets are **private**.\n:::\n\nAfter.");
+
+    expect($html)->toContain('<div class="callout callout-note" data-callout="note">')
+        ->toContain('<p>All buckets are <strong>private</strong>.</p>')
+        ->toContain('<p>After.</p>')
+        ->not->toContain(':::');
+});
+
+it('renders an escaped callout title', function () {
+    $html = (new MarkdownDocumentParser)->renderAsHtml(":::warning Breaking <change>\nBody.\n:::");
+
+    expect($html)->toContain('<div class="callout callout-warning" data-callout="warning">')
+        ->toContain('<p class="callout-title">Breaking &lt;change&gt;</p>');
+});
+
+it('keeps a callout open across a fenced code block containing a closing fence', function () {
+    $html = (new MarkdownDocumentParser)->renderAsHtml(":::tip\n```md\n:::\n```\nStill inside.\n:::");
+
+    expect($html)->toMatch('/<div class="callout callout-tip"[^>]*>.*<code[^>]*>:::\n<\/code>.*<p>Still inside.<\/p>\s*<\/div>/s');
+});

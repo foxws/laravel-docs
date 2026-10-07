@@ -67,6 +67,8 @@ $document->resolveSeoTitle(); // "Installation — Laravel Podman — Foxws"
 
 `Document::body` stores the raw markdown pulled from GitHub — nothing is pre-rendered at sync time, so you're free to render it however you like. Call `$document->toHtml()` for a GitHub-flavored, HTML-stripped, unsafe-link-free HTML string (tune the markdown options via `docs.markdown.options`); the result is cached per document, keyed by its `blob_sha`, so it re-renders automatically only when `docs:sync` pulls new content. Pass `toHtml(shouldCache: false)` to skip the cache, and tune it (or turn it off entirely) via the `docs.cache` config.
 
+Callout blocks are supported too. A `:::note`, `:::tip`, `:::warning` (or any `:::type`) line opens one, an optional title can follow the type (`:::warning Breaking change`), and a `:::` line closes it. They render as `<div class="callout callout-{type}" data-callout="{type}">`, with a `<p class="callout-title">` when a title is given. No styles ship with the package, so style them in your app.
+
 `Document` also implements `Htmlable`, so `{{ $document }}` in a Blade view renders its HTML unescaped, the same as calling `{!! $document->toHtml() !!}`.
 
 See the [documentation](docs/index.md) for configuration, registering projects and versions, scheduling syncs, and search.

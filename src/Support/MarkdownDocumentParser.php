@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Foxws\Docs\Support;
 
+use Foxws\Docs\Support\Markdown\CalloutExtension;
 use Illuminate\Support\Str;
 use League\CommonMark\Extension\FrontMatter\Data\SymfonyYamlFrontMatterParser;
 use League\CommonMark\Extension\FrontMatter\FrontMatterParser;
@@ -34,7 +35,7 @@ final class MarkdownDocumentParser
      */
     public function renderAsHtml(string $markdown, array $options = []): string
     {
-        return Str::markdown($markdown, [...$this->markdownOptions(), ...$options]);
+        return Str::markdown($markdown, [...$this->markdownOptions(), ...$options], [new CalloutExtension]);
     }
 
     /**
