@@ -2,6 +2,18 @@
 
 All notable changes to `laravel-docs` will be documented in this file.
 
+## v1.6.0 - 2026-10-07
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Other Changes
+
+* test: give the default version a fixed name so it can't collide by @francoism90 in https://github.com/foxws/laravel-docs/pull/30
+* feat: render :::note, :::tip and :::warning callout blocks by @francoism90 in https://github.com/foxws/laravel-docs/pull/31
+
+**Full Changelog**: https://github.com/foxws/laravel-docs/compare/v1.5.1...v1.6.0
+
 ## v1.5.1 - 2026-10-02
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
