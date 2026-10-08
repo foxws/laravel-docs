@@ -2,6 +2,17 @@
 
 All notable changes to `laravel-docs` will be documented in this file.
 
+## v1.8.1 - 2026-10-08
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Other Changes
+
+* fix: keep syncing other versions and projects after a GitHub error by @francoism90 in https://github.com/foxws/laravel-docs/pull/35
+
+**Full Changelog**: https://github.com/foxws/laravel-docs/compare/v1.8.0...v1.8.1
+
 ## v1.8.0 - 2026-10-08
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
