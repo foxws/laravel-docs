@@ -61,7 +61,7 @@
         "lint": "vendor/bin/pint --parallel",
         "lint:check": "vendor/bin/pint --parallel --test",
         "analyse": "vendor/bin/phpstan analyse",
-        "test:types": "vendor/bin/pest --type-coverage --min=100",
+        "test:types": "@php -d memory_limit=512M vendor/bin/pest --type-coverage --min=100",
         "test:unit": "vendor/bin/pest --parallel",
         "test": [
             "@analyse",
