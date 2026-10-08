@@ -2,6 +2,18 @@
 
 All notable changes to `laravel-docs` will be documented in this file.
 
+## v1.7.0 - 2026-10-08
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Other Changes
+
+* feat: render GitHub alerts as callouts by @francoism90 in https://github.com/foxws/laravel-docs/pull/32
+* fix: give type coverage enough memory to finish by @francoism90 in https://github.com/foxws/laravel-docs/pull/33
+
+**Full Changelog**: https://github.com/foxws/laravel-docs/compare/v1.6.0...v1.7.0
+
 ## v1.6.0 - 2026-10-07
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
