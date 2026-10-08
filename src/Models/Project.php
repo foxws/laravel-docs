@@ -7,6 +7,7 @@ namespace Foxws\Docs\Models;
 use ArrayObject;
 use Foxws\Docs\Collections\VersionCollection;
 use Foxws\Docs\Database\Factories\ProjectFactory;
+use Foxws\Docs\Enums\DocumentType;
 use Foxws\Docs\Enums\ProjectDriver;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Collection;
@@ -32,6 +33,7 @@ use Illuminate\Support\Str;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property VersionCollection<int, Version> $versions
+ * @property Collection<int, Document> $files
  * @property Collection<int, Document> $documents
  */
 class Project extends Model
@@ -81,7 +83,8 @@ class Project extends Model
     }
 
     /**
-     * All documents across every version of this project.
+     * All pages across every version of this project; root files belong
+     * to no version, so they're in files() instead.
      *
      * @return HasManyThrough<Document, Version, $this>
      */
@@ -93,6 +96,33 @@ class Project extends Model
             'project_id',
             'version_id',
         );
+    }
+
+    /**
+     * Documents of type File: the repository's root files, such as the
+     * README, synced by docs:sync — see `docs.sync.additional_files`.
+     *
+     * @return HasMany<Document, $this>
+     */
+    public function files(): HasMany
+    {
+        // Pinned FK: hasMany() would otherwise guess it from the subclass's class name.
+        return $this->hasMany(Document::modelClass(), 'project_id')->where('type', DocumentType::File);
+    }
+
+    /**
+     * One synced root file by its path, matched case-insensitively, so
+     * `file('readme.md')` finds a repository's `README.md`.
+     */
+    public function file(string $path): ?Document
+    {
+        $path = strtolower(ltrim($path, '/'));
+
+        if ($this->relationLoaded('files')) {
+            return $this->files->first(fn (Document $file): bool => strtolower($file->source_path) === $path);
+        }
+
+        return $this->files()->whereRaw('lower(source_path) = ?', [$path])->first();
     }
 
     protected static function newFactory(): ProjectFactory

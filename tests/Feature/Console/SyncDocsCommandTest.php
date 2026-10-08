@@ -344,3 +344,20 @@ it('only syncs the project matching --project', function () {
 it('fails when --project does not match a registered slug', function () {
     $this->artisan('docs:sync', ['--project' => 'missing'])->assertFailed();
 });
+
+it('stores each project root file', function () {
+    config()->set('docs.sync.additional_files', ['README.md']);
+
+    fakeVersion();
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/main*' => Http::response(fakeTreeResponse([
+            ['path' => 'README.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'readme-sha', 'size' => 64, 'url' => '...'],
+        ]), 200),
+        'raw.githubusercontent.com/foxws/example/main/README.md' => Http::response('Intro.', 200),
+    ]);
+
+    $this->artisan('docs:sync')->assertSuccessful();
+
+    expect(Project::query()->firstOrFail()->file('README.md')?->body)->toBe('Intro.');
+});

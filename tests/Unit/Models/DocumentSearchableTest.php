@@ -50,3 +50,11 @@ it('declares database-engine search strategies on the searchable columns', funct
     expect($fullText->columns)->toBe(['body']);
     expect($prefix->columns)->toBe(['title', 'section']);
 });
+
+it('is never searchable when it is a root file', function () {
+    config()->set('docs.search.enabled', true);
+
+    $document = Document::factory()->file()->make();
+
+    expect($document->shouldBeSearchable())->toBeFalse();
+});

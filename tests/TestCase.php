@@ -39,5 +39,9 @@ abstract class TestCase extends Orchestra
 
         // In-memory Scout engine, no network-backed driver needed for tests.
         config()->set('scout.driver', 'collection');
+
+        // Syncing project files adds a tree and file request per project;
+        // the tests for it turn it back on, the rest don't fake those.
+        config()->set('docs.sync.additional_files', []);
     }
 }

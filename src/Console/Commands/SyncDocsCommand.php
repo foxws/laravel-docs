@@ -6,6 +6,7 @@ namespace Foxws\Docs\Console\Commands;
 
 use Foxws\Docs\Actions\DiscoverLatestVersion;
 use Foxws\Docs\Actions\PruneOldVersions;
+use Foxws\Docs\Actions\SyncProjectFiles;
 use Foxws\Docs\Actions\SyncVersionDocuments;
 use Foxws\Docs\Exceptions\EmptySourceTreeException;
 use Foxws\Docs\Jobs\SyncDocsSearchIndex;
@@ -31,6 +32,7 @@ class SyncDocsCommand extends Command
         SyncVersionDocuments $syncVersionDocuments,
         DiscoverLatestVersion $discoverLatestVersion,
         PruneOldVersions $pruneOldVersions,
+        SyncProjectFiles $syncProjectFiles,
     ): int {
         $projectSlug = $this->option('project');
         $project = null;
@@ -54,10 +56,10 @@ class SyncDocsCommand extends Command
         }
 
         if ($project) {
-            $this->syncProject($project, $syncVersionDocuments, $discoverLatestVersion, $pruneOldVersions);
+            $this->syncProject($project, $syncVersionDocuments, $discoverLatestVersion, $pruneOldVersions, $syncProjectFiles);
         } else {
             Project::eachRegistered(fn (Project $project) => $this->syncProject(
-                $project, $syncVersionDocuments, $discoverLatestVersion, $pruneOldVersions,
+                $project, $syncVersionDocuments, $discoverLatestVersion, $pruneOldVersions, $syncProjectFiles,
             ));
         }
 
@@ -71,6 +73,7 @@ class SyncDocsCommand extends Command
         SyncVersionDocuments $syncVersionDocuments,
         DiscoverLatestVersion $discoverLatestVersion,
         PruneOldVersions $pruneOldVersions,
+        SyncProjectFiles $syncProjectFiles,
     ): void {
         $discoverLatestVersion->handle($project);
         $pruneOldVersions->handle($project);
@@ -89,6 +92,8 @@ class SyncDocsCommand extends Command
                 },
             );
         });
+
+        $syncProjectFiles->handle($project);
     }
 
     /**

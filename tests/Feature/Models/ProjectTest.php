@@ -144,3 +144,23 @@ it('iterates every registered project', function () {
 
     expect($slugs)->toHaveCount(3);
 });
+
+it('finds a root file by path regardless of case, loaded or not', function () {
+    $project = Project::factory()->create();
+    Document::factory()->file('README.md')->for($project)->create(['body' => 'Intro.']);
+
+    expect($project->file('readme.md')?->body)->toBe('Intro.')
+        ->and($project->load('files')->file('/ReadMe.MD')?->body)->toBe('Intro.')
+        ->and($project->file('CHANGELOG.md'))->toBeNull();
+});
+
+it('keeps root files apart from the pages of its versions', function () {
+    $project = Project::factory()->create();
+    $version = Version::factory()->create(['project_id' => $project->id]);
+    $page = Document::factory()->create(['version_id' => $version->id]);
+    $file = Document::factory()->file()->for($project)->create();
+
+    expect($project->documents->modelKeys())->toBe([$page->id])
+        ->and($version->documents->modelKeys())->toBe([$page->id])
+        ->and($project->files->modelKeys())->toBe([$file->id]);
+});

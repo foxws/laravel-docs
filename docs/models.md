@@ -18,8 +18,13 @@ order: 1
 
 `Project::versions()` — `HasMany<Version>`.
 
+`Project::files()` — `HasMany<Document>`, the documents of type `File`:
+the root files synced by `docs:sync`. `$project->file(string $path)`
+returns one by path, matched case-insensitively, or `null`.
+
 `Project::documents()` — `HasManyThrough<Document, Version>`, i.e. every
-document across every version of this project.
+page across every version of this project. Root files belong to no
+version, so they're never in it.
 
 `Project::findOrCreate(string $slug, array $attributes = [])` — finds by
 slug, or creates with the given attributes if it doesn't exist yet.
@@ -83,14 +88,20 @@ unmarking whichever version was default before. This is the only way
 
 | Field | Notes |
 | --- | --- |
-| `version_id` | `belongsTo(Version::class)`. |
+| `type` | `DocumentType::Page` for a page from the docs folder, `DocumentType::File` for a root file such as the README. |
+| `version_id` | `belongsTo(Version::class)`. Pages only; `null` for root files. |
+| `project_id` | `belongsTo(Project::class)`. Root files only; `null` for pages. |
 | `slug`, `title`, `body` (rendered HTML), `order`, `section` | Content, from front matter + rendered markdown. |
 | `source_path`, `blob_sha` | Identify the file in the source repo and detect changes between syncs. |
 | `searchable` | Per-document opt-out of Scout indexing, set via front matter. |
 | `seo` | Array cast; per-document override. |
 
-Reach the owning project via `$document->version->project` — there's no
-direct `project` relation, since a document only ever belongs to one version.
+A page belongs to a version and reaches its project via
+`$document->version->project`. A root file belongs to the project
+directly, with `searchable` false; it's never indexed and never in a
+version's documents. `$document->owningProject()` returns the project of
+either, and `$document->isFile()` tells them apart. See
+[syncing.md](syncing.md#project-files).
 
 `Document::syncSearchIndex()` — re-indexes all searchable documents, if
 `docs.search.enabled` is true. Used by `docs:sync`.

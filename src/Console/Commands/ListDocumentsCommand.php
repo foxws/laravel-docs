@@ -45,12 +45,14 @@ class ListDocumentsCommand extends Command
         }
 
         $documents = Document::modelClass()::query()
-            ->with('version.project')
+            ->with(['version.project', 'project'])
             ->when($version, fn (Builder $query) => $query->where('version_id', $version?->id))
-            ->when($project && ! $version, fn (Builder $query) => $query->whereRelation('version', 'project_id', $project?->id))
+            ->when($project && ! $version, fn (Builder $query) => $query->where(fn (Builder $query) => $query
+                ->whereRelation('version', 'project_id', $project?->id)
+                ->orWhere('project_id', $project?->id)))
             ->get()
             ->sortBy([
-                ['version.project.slug', 'asc'],
+                fn (Document $a, Document $b): int => $a->owningProject()?->slug <=> $b->owningProject()?->slug,
                 ['version_id', 'asc'],
                 ['order', 'asc'],
                 ['id', 'asc'],
@@ -65,8 +67,8 @@ class ListDocumentsCommand extends Command
         $this->table(
             ['Project', 'Version', 'Slug', 'Title', 'Section', 'Order', 'Searchable'],
             $documents->map(fn (Document $document): array => [
-                $document->version->project->slug,
-                $document->version->name,
+                $document->owningProject()->slug ?? '-',
+                $document->version !== null ? $document->version->name : '-',
                 $document->slug,
                 $document->title,
                 $document->section ?? '-',

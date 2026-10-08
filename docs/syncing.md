@@ -22,10 +22,39 @@ that version's `ref`, prunes documents whose file no longer exists remotely
 file whose git blob SHA has changed since the last sync. Unchanged files are
 skipped entirely — their content is never re-fetched.
 
+Finally, it stores the project's root files, such as its README and
+CHANGELOG (see [Project files](#project-files) below).
+
 A version's `last_synced_at`/`last_synced_sha` are only updated once its sync
 completes without error, so a failed run never marks a version as up to
 date. Each version of a project syncs independently, so v1.0.0 and v2.0.0
 can be at different commits, synced at different times.
+
+## Project files
+
+`docs:sync` also stores a few files from the root of each project's
+repository: by default `README.md`, `CHANGELOG.md` and `NEWS.md`
+(`docs.sync.additional_files`). Paths match case-insensitively, so a repository's
+`Readme.md` or `NEWS.MD` is picked up too, and a file a repository doesn't
+have is simply skipped. They're read at the default version's `ref`, or at
+`HEAD` while the project has no versions, so projects without any releases
+get them as well. Local projects read them from disk.
+
+Like documents, only files whose git blob SHA changed are downloaded again,
+and a file that's gone from the repository is deleted. A failed fetch is
+reported and keeps what was stored last time, so it never fails the sync.
+
+Each file is stored as a `Document` of type `File`. It belongs to the
+project instead of a version, so it's never part of a version's pages,
+and it's synced with `searchable` false, so it never shows up in search:
+
+```php
+$project->file('README.md')?->toHtml(); // rendered and cached like any document
+$project->file('changelog.md')?->body; // raw markdown; the path matches any case
+$project->files; // every synced root file
+```
+
+Set `docs.sync.additional_files` to `[]` to turn it off.
 
 Pass `--project={slug}` to sync a single project instead of every registered
 one — useful right after registering or updating just that project:
