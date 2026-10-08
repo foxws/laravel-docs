@@ -11,8 +11,10 @@ use Foxws\Docs\Models\Version;
 use Foxws\Docs\Support\DocsClientResolver;
 use Foxws\Docs\Support\MarkdownDocumentParser;
 use Foxws\Docs\Support\TextNormalizer;
+use Illuminate\Http\Client\HttpClientException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 final class SyncVersionDocuments
 {
@@ -31,6 +33,8 @@ final class SyncVersionDocuments
      *                                  all of its own docs/*.md files while still returning a populated
      *                                  tree. Callers decide the policy (skip and continue vs. abort);
      *                                  see SyncDocsCommand/SyncProjectDocuments.
+     * @throws HttpClientException if GitHub can't be reached or refuses the request.
+     * @throws RuntimeException if a local project's file can't be read.
      */
     public function handle(Version $version): void
     {

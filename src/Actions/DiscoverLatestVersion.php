@@ -8,6 +8,7 @@ use Foxws\Docs\Enums\ProjectDriver;
 use Foxws\Docs\Models\Project;
 use Foxws\Docs\Models\Version;
 use Foxws\Docs\Support\GitHubDocsClient;
+use Illuminate\Http\Client\HttpClientException;
 
 final class DiscoverLatestVersion
 {
@@ -19,7 +20,8 @@ final class DiscoverLatestVersion
      * Register the project's latest GitHub release as its default version.
      * No-op if auto-discovery is disabled, the project isn't GitHub-driven
      * (a local folder has no "release" to discover) or has no repository set,
-     * or the repository has no releases.
+     * or the repository has no releases. A failed lookup is reported and
+     * leaves the registered versions as they are, so it never stops a sync.
      */
     public function handle(Project $project): ?Version
     {
@@ -31,7 +33,13 @@ final class DiscoverLatestVersion
             return null;
         }
 
-        $release = $this->client->fetchLatestRelease($project->github_repository);
+        try {
+            $release = $this->client->fetchLatestRelease($project->github_repository);
+        } catch (HttpClientException $e) {
+            report($e);
+
+            return null;
+        }
 
         if ($release === null) {
             return null;

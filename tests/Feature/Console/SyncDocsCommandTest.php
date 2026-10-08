@@ -223,6 +223,8 @@ it('skips a version instead of pruning it when the raw git tree comes back compl
 });
 
 it('does not update last_synced_at when the sync fails partway', function () {
+    config()->set('docs.github.retry.times', 1);
+
     $version = fakeVersion(['last_synced_at' => null, 'last_synced_sha' => null]);
 
     Http::fake([
@@ -232,15 +234,41 @@ it('does not update last_synced_at when the sync fails partway', function () {
         'raw.githubusercontent.com/foxws/example/main/docs/installation.md' => Http::response('server error', 500),
     ]);
 
-    try {
-        $this->artisan('docs:sync')->run();
-    } catch (RequestException) {
-        // v1 behavior: an uncaught exception on one version aborts the whole command.
-    }
+    Exceptions::fake();
+
+    $this->artisan('docs:sync')->assertFailed();
 
     $version->refresh();
     expect($version->last_synced_at)->toBeNull();
     expect($version->last_synced_sha)->toBeNull();
+
+    Exceptions::assertReported(RequestException::class);
+});
+
+it('reports a version that fails to sync and still syncs the next project', function () {
+    config()->set('docs.github.retry.times', 1);
+
+    fakeVersion();
+    $other = Project::factory()->create(['slug' => 'other', 'github_repository' => 'foxws/other']);
+    Version::factory()->create(['project_id' => $other->id, 'ref' => 'main']);
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/main*' => Http::response(['message' => 'Forbidden'], 403),
+        'api.github.com/repos/foxws/other/git/trees/main*' => Http::response(fakeTreeResponse([
+            ['path' => 'docs/installation.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-a', 'size' => 512, 'url' => '...'],
+        ]), 200),
+        'raw.githubusercontent.com/foxws/other/main/docs/installation.md' => Http::response('# Installation', 200),
+    ]);
+
+    Exceptions::fake();
+
+    $this->artisan('docs:sync')
+        ->expectsOutputToContain('FAIL')
+        ->assertFailed();
+
+    expect(Document::query()->pluck('source_path')->all())->toBe(['docs/installation.md']);
+
+    Exceptions::assertReported(RequestException::class);
 });
 
 it("promotes the index document's metadata front matter onto the project", function () {

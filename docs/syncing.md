@@ -30,6 +30,14 @@ completes without error, so a failed run never marks a version as up to
 date. Each version of a project syncs independently, so v1.0.0 and v2.0.0
 can be at different commits, synced at different times.
 
+A GitHub error, such as a revoked token or a rate limit, doesn't stop the
+run either. A failed release lookup is reported and keeps the versions
+already registered. A version that fails to sync is reported, keeps its
+documents and is retried on the next run, while the remaining versions and
+projects still sync. `docs:sync` then exits with a failure status, so a
+scheduled run still shows the error. A queued project's job reports it and
+completes, so the rest of the chain keeps going.
+
 ## Project files
 
 `docs:sync` also stores a few files from the root of each project's
