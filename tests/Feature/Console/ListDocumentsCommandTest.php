@@ -35,6 +35,19 @@ it('only lists documents of the given project', function () {
         ->assertSuccessful();
 });
 
+it('lists a project root files without a version', function () {
+    $project = Project::factory()->create(['slug' => 'flatpaks']);
+    Document::factory()->file('README.md')->for($project)->create();
+    Document::factory()->file('NEWS.md')->for(Project::factory()->state(['slug' => 'other']))->create();
+
+    $this->artisan('docs:documents:list', ['project' => 'flatpaks'])
+        ->expectsTable(
+            ['Project', 'Version', 'Slug', 'Title', 'Section', 'Order', 'Searchable'],
+            [['flatpaks', '-', 'readme', 'Readme', '-', 0, 'no']],
+        )
+        ->assertSuccessful();
+});
+
 it('only lists documents of the given version', function () {
     $project = Project::factory()->create(['slug' => 'laravel-podman']);
     $current = Version::factory()->create(['project_id' => $project->id, 'name' => '2.0.0']);

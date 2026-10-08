@@ -42,6 +42,6 @@ abstract class TestCase extends Orchestra
 
         // Syncing project files adds a tree and file request per project;
         // the tests for it turn it back on, the rest don't fake those.
-        config()->set('docs.files.enabled', false);
+        config()->set('docs.sync.additional_files', []);
     }
 }

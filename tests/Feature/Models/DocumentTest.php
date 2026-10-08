@@ -53,3 +53,11 @@ it('scopes search results to a version via a where clause', function () {
     expect($results->pluck('id'))->toContain($matching->id)
         ->and($results->pluck('id'))->not->toContain($otherVersion->id);
 });
+
+it('resolves its project through its version, or directly when it is a root file', function () {
+    $page = Document::factory()->create();
+    $file = Document::factory()->file()->create();
+
+    expect($page->owningProject()?->is($page->version?->project))->toBeTrue()
+        ->and($file->owningProject()?->is($file->project))->toBeTrue();
+});

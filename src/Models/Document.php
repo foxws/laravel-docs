@@ -6,6 +6,7 @@ namespace Foxws\Docs\Models;
 
 use ArrayObject;
 use Foxws\Docs\Database\Factories\DocumentFactory;
+use Foxws\Docs\Enums\DocumentType;
 use Foxws\Docs\Support\MarkdownDocumentParser;
 use Foxws\Docs\Support\TextNormalizer;
 use Illuminate\Contracts\Support\Htmlable;
@@ -21,8 +22,14 @@ use Laravel\Scout\Attributes\SearchUsingPrefix;
 use Laravel\Scout\Searchable;
 
 /**
+ * A page from a version's docs folder, or — with type File — a file from
+ * the root of the project's repository, such as its README, which belongs
+ * to the project instead of a version and is never searchable.
+ *
  * @property int $id
- * @property int $version_id
+ * @property DocumentType $type
+ * @property int|null $project_id Set on files only; a page reaches its project through its version.
+ * @property int|null $version_id Set on pages only.
  * @property string $slug
  * @property string $title
  * @property string $body Raw markdown source; render with toHtml().
@@ -34,7 +41,8 @@ use Laravel\Scout\Searchable;
  * @property ArrayObject<string, mixed>|null $seo
  * @property Carbon $created_at
  * @property Carbon $updated_at
- * @property Version $version
+ * @property Version|null $version
+ * @property Project|null $project
  */
 class Document extends Model implements Htmlable
 {
@@ -46,8 +54,15 @@ class Document extends Model implements Htmlable
     /** Pinned so a subclass still resolves to this table. */
     protected $table = 'documents';
 
+    /** @var array<string, mixed> */
+    protected $attributes = [
+        'type' => 'page',
+    ];
+
     /** @var list<string> */
     protected $fillable = [
+        'type',
+        'project_id',
         'version_id',
         'slug',
         'title',
@@ -66,6 +81,7 @@ class Document extends Model implements Htmlable
     protected function casts(): array
     {
         return [
+            'type' => DocumentType::class,
             'order' => 'integer',
             'searchable' => 'boolean',
             'seo' => AsArrayObject::class,
@@ -81,6 +97,30 @@ class Document extends Model implements Htmlable
     }
 
     /**
+     * The project a file belongs to; pages have none and reach theirs
+     * through version — see owningProject().
+     *
+     * @return BelongsTo<Project, $this>
+     */
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::modelClass());
+    }
+
+    /**
+     * The project of a page or a file alike.
+     */
+    public function owningProject(): ?Project
+    {
+        return $this->version !== null ? $this->version->project : $this->project;
+    }
+
+    public function isFile(): bool
+    {
+        return $this->type === DocumentType::File;
+    }
+
+    /**
      * Resolve the document's SEO title, cascading from the most specific
      * override down to the package-wide default.
      */
@@ -90,7 +130,7 @@ class Document extends Model implements Htmlable
             return TextNormalizer::normalize($title);
         }
 
-        if (filled($pattern = $this->version->project->seo['title_pattern'] ?? null)) {
+        if (filled($pattern = $this->owningProject()?->seo['title_pattern'] ?? null)) {
             return TextNormalizer::normalize(sprintf($pattern, $this->title));
         }
 
@@ -116,7 +156,7 @@ class Document extends Model implements Htmlable
             return TextNormalizer::normalize($description);
         }
 
-        if (filled($description = $this->version->project->seo['description'] ?? null)) {
+        if (filled($description = $this->owningProject()?->seo['description'] ?? null)) {
             return TextNormalizer::normalize($description);
         }
 
@@ -164,10 +204,11 @@ class Document extends Model implements Htmlable
      * This does not cover the per-document `searchable` column: Scout's
      * database engine never consults shouldBeSearchable(), so add your own
      * `->where('searchable', true)` when calling Document::search().
+     * Files are synced with `searchable` false, and never indexed.
      */
     public function shouldBeSearchable(): bool
     {
-        return (bool) config('docs.search.enabled');
+        return config('docs.search.enabled') && ! $this->isFile();
     }
 
     public function searchableAs(): string

@@ -34,7 +34,7 @@ can be at different commits, synced at different times.
 
 `docs:sync` also stores a few files from the root of each project's
 repository: by default `README.md`, `CHANGELOG.md` and `NEWS.md`
-(`docs.files.paths`). Paths match case-insensitively, so a repository's
+(`docs.sync.additional_files`). Paths match case-insensitively, so a repository's
 `Readme.md` or `NEWS.MD` is picked up too, and a file a repository doesn't
 have is simply skipped. They're read at the default version's `ref`, or at
 `HEAD` while the project has no versions, so projects without any releases
@@ -44,15 +44,17 @@ Like documents, only files whose git blob SHA changed are downloaded again,
 and a file that's gone from the repository is deleted. A failed fetch is
 reported and keeps what was stored last time, so it never fails the sync.
 
-Each file is a `ProjectFile` holding raw markdown:
+Each file is stored as a `Document` of type `File`. It belongs to the
+project instead of a version, so it's never part of a version's pages,
+and it's synced with `searchable` false, so it never shows up in search:
 
 ```php
-$project->file('README.md')?->toHtml(); // rendered and cached, like Document::toHtml()
-$project->file('changelog.md')?->content; // raw markdown; the path matches any case
-$project->files; // every synced file
+$project->file('README.md')?->toHtml(); // rendered and cached like any document
+$project->file('changelog.md')?->body; // raw markdown; the path matches any case
+$project->files; // every synced root file
 ```
 
-Set `DOCS_FILES_ENABLED=false` to turn it off.
+Set `docs.sync.additional_files` to `[]` to turn it off.
 
 Pass `--project={slug}` to sync a single project instead of every registered
 one — useful right after registering or updating just that project:

@@ -345,8 +345,8 @@ it('fails when --project does not match a registered slug', function () {
     $this->artisan('docs:sync', ['--project' => 'missing'])->assertFailed();
 });
 
-it('stores each project root file when enabled', function () {
-    config()->set('docs.files.enabled', true);
+it('stores each project root file', function () {
+    config()->set('docs.sync.additional_files', ['README.md']);
 
     fakeVersion();
 
@@ -359,5 +359,5 @@ it('stores each project root file when enabled', function () {
 
     $this->artisan('docs:sync')->assertSuccessful();
 
-    expect(Project::query()->firstOrFail()->file('README.md')?->content)->toBe('Intro.');
+    expect(Project::query()->firstOrFail()->file('README.md')?->body)->toBe('Intro.');
 });

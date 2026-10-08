@@ -79,8 +79,8 @@ it('is keyed for overlap protection by its own project slug, not shared with oth
     expect($otherMiddleware[0]->key)->toBe('other');
 });
 
-it('stores the project root files when enabled', function () {
-    config()->set('docs.files.enabled', true);
+it('stores the project root files', function () {
+    config()->set('docs.sync.additional_files', ['README.md']);
 
     Project::factory()->create(['slug' => 'example', 'github_repository' => 'foxws/example']);
 
@@ -95,5 +95,5 @@ it('stores the project root files when enabled', function () {
 
     $this->app->call([new SyncProjectDocuments('example'), 'handle']);
 
-    expect(Project::findBySlug('example')?->file('README.md')?->content)->toBe('Intro.');
+    expect(Project::findBySlug('example')?->file('README.md')?->body)->toBe('Intro.');
 });
