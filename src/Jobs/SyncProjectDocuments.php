@@ -6,6 +6,7 @@ namespace Foxws\Docs\Jobs;
 
 use Foxws\Docs\Actions\DiscoverLatestVersion;
 use Foxws\Docs\Actions\PruneOldVersions;
+use Foxws\Docs\Actions\SyncProjectFiles;
 use Foxws\Docs\Actions\SyncVersionDocuments;
 use Foxws\Docs\Exceptions\EmptySourceTreeException;
 use Foxws\Docs\Models\Project;
@@ -46,6 +47,7 @@ final class SyncProjectDocuments implements ShouldQueue
         SyncVersionDocuments $syncVersionDocuments,
         DiscoverLatestVersion $discoverLatestVersion,
         PruneOldVersions $pruneOldVersions,
+        SyncProjectFiles $syncProjectFiles,
     ): void {
         $project = Project::findBySlug($this->projectSlug);
 
@@ -64,5 +66,7 @@ final class SyncProjectDocuments implements ShouldQueue
                 report($e);
             }
         });
+
+        $syncProjectFiles->handle($project);
     }
 }

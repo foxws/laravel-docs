@@ -78,3 +78,22 @@ it('is keyed for overlap protection by its own project slug, not shared with oth
 
     expect($otherMiddleware[0]->key)->toBe('other');
 });
+
+it('stores the project root files when enabled', function () {
+    config()->set('docs.files.enabled', true);
+
+    Project::factory()->create(['slug' => 'example', 'github_repository' => 'foxws/example']);
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/HEAD*' => Http::response([
+            'sha' => 'root-tree-sha',
+            'tree' => [['path' => 'README.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'readme-sha', 'size' => 64, 'url' => '...']],
+            'truncated' => false,
+        ], 200),
+        'raw.githubusercontent.com/foxws/example/HEAD/README.md' => Http::response('Intro.', 200),
+    ]);
+
+    $this->app->call([new SyncProjectDocuments('example'), 'handle']);
+
+    expect(Project::findBySlug('example')?->file('README.md')?->content)->toBe('Intro.');
+});

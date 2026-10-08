@@ -15,6 +15,7 @@ Projects and versions are registered via the `docs:projects:add` /
 | --- | --- |
 | `models.project` | The `Project` model class to use. Override to your own subclass — see [models.md](models.md#customizing-the-models). |
 | `models.version` | The `Version` model class to use. Override to your own subclass — see [models.md](models.md#customizing-the-models). |
+| `models.project_file` | The `ProjectFile` model class to use. Override to your own subclass. |
 | `models.document` | The `Document` model class to use. Override to your own subclass — see [models.md](models.md#customizing-the-models). |
 | `seo.title_pattern` | Package-wide `sprintf`-style fallback for `Document::resolveSeoTitle()`. Defaults to `env('DOCS_SEO_TITLE_PATTERN', '%s — '.env('APP_NAME', 'Laravel'))`. |
 | `seo.description` | Package-wide fallback for `Document::resolveSeoDescription()`. Defaults to `env('DOCS_SEO_DESCRIPTION', '')`. |
@@ -26,6 +27,8 @@ Projects and versions are registered via the `docs:projects:add` /
 | `sync.version_name_pattern` | Regex used to derive an auto-discovered version's `name` from its release tag — default `/\d.*/` keeps from the first digit onward, so `v2.0.0`/`version-2.0.0`/`2.0.0` all become `2.0.0`. Falls back to the raw tag if it doesn't match. Set to `null` to always use the raw tag. Defaults to `env('DOCS_VERSION_NAME_PATTERN', '/\d.*/')`. |
 | `sync.keep_versions` | How many non-default versions to keep per project (most recently created first) — older ones are deleted on the next sync. The default version itself is never pruned. Set to `0` to keep everything. Defaults to `env('DOCS_KEEP_VERSIONS', 5)`. |
 | `sync.prune_chunk_size` | Maximum number of old versions deleted per `docs:sync` run once `keep_versions` is exceeded — caps how much a single run prunes if a project has a large backlog. Defaults to `env('DOCS_PRUNE_CHUNK_SIZE', 50)`. |
+| `files.enabled` | Whether `docs:sync` stores each project's root files (README, CHANGELOG, ...) — see [syncing.md](syncing.md#project-files). Defaults to `env('DOCS_FILES_ENABLED', true)`. |
+| `files.paths` | Which root files to store, matched case-insensitively. Defaults to `README.md`, `CHANGELOG.md` and `NEWS.md`. |
 | `sync.queue.enabled` | Whether `docs:sync` queues each project's sync instead of running inline by default — see [syncing.md](syncing.md#queued-syncing). Override per run with `--queue`/`--sync`. Defaults to `env('DOCS_SYNC_QUEUED', false)`. |
 | `sync.queue.connection` | Queue connection the chained sync jobs are dispatched on. Defaults to `env('DOCS_SYNC_QUEUE_CONNECTION')` — `null` uses the application's default connection. |
 | `sync.queue.queue` | Queue name the chained sync jobs are dispatched on. Defaults to `env('DOCS_SYNC_QUEUE')` — `null` uses the application's default queue. |

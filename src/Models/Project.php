@@ -32,6 +32,7 @@ use Illuminate\Support\Str;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property VersionCollection<int, Version> $versions
+ * @property Collection<int, ProjectFile> $files
  * @property Collection<int, Document> $documents
  */
 class Project extends Model
@@ -93,6 +94,33 @@ class Project extends Model
             'project_id',
             'version_id',
         );
+    }
+
+    /**
+     * Files from the repository root, such as the README, synced by
+     * docs:sync — see `docs.files.paths`.
+     *
+     * @return HasMany<ProjectFile, $this>
+     */
+    public function files(): HasMany
+    {
+        // Pinned FK: hasMany() would otherwise guess it from the subclass's class name.
+        return $this->hasMany(ProjectFile::modelClass(), 'project_id');
+    }
+
+    /**
+     * One synced file by its path, matched case-insensitively, so
+     * `file('readme.md')` finds a repository's `README.md`.
+     */
+    public function file(string $path): ?ProjectFile
+    {
+        $path = strtolower(ltrim($path, '/'));
+
+        if ($this->relationLoaded('files')) {
+            return $this->files->first(fn (ProjectFile $file): bool => strtolower($file->path) === $path);
+        }
+
+        return $this->files()->whereRaw('lower(path) = ?', [$path])->first();
     }
 
     protected static function newFactory(): ProjectFactory

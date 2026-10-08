@@ -18,6 +18,10 @@ order: 1
 
 `Project::versions()` — `HasMany<Version>`.
 
+`Project::files()` — `HasMany<ProjectFile>`, the root files synced by
+`docs:sync`. `$project->file(string $path)` returns one by path, matched
+case-insensitively, or `null`.
+
 `Project::documents()` — `HasManyThrough<Document, Version>`, i.e. every
 document across every version of this project.
 
@@ -76,6 +80,20 @@ existing version; sync bookkeeping is never touched.
 `$version->markAsDefault()` — marks this version as the project's default,
 unmarking whichever version was default before. This is the only way
 `is_default` changes; `updateRegistration()` doesn't touch it.
+
+## `ProjectFile`
+
+`Foxws\Docs\Models\ProjectFile`
+
+| Field | Notes |
+| --- | --- |
+| `path` | Path from the repository root, as the repository spells it, e.g. `README.md`. Unique per project. |
+| `content` | Raw markdown. |
+| `blob_sha` | Git blob SHA (or local file hash) the content was synced from; unchanged files aren't re-downloaded. |
+
+`$file->toHtml()` renders `content` the same way as `Document::toHtml()`,
+cached per `blob_sha`. `ProjectFile` implements `Htmlable` too. See
+[syncing.md](syncing.md#project-files).
 
 ## `Document`
 

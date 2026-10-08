@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Foxws\Docs\Models\Document;
 use Foxws\Docs\Models\Project;
+use Foxws\Docs\Models\ProjectFile;
 use Foxws\Docs\Models\Version;
 
 return [
@@ -17,6 +18,7 @@ return [
         'project' => Project::class,
         'version' => Version::class,
         'document' => Document::class,
+        'project_file' => ProjectFile::class,
     ],
 
     /*
@@ -111,6 +113,23 @@ return [
              */
             'overlap_release_after' => env('DOCS_SYNC_QUEUE_OVERLAP_RELEASE_AFTER', 30),
             'overlap_expires_after' => env('DOCS_SYNC_QUEUE_OVERLAP_EXPIRES_AFTER', 600),
+        ],
+    ],
+
+    'files' => [
+        /*
+         * docs:sync also stores these files from the root of each project's
+         * repository as raw markdown (see ProjectFile), read at the default
+         * version's ref, or HEAD while a project has no versions. Paths
+         * match case-insensitively; a file a repository doesn't have is
+         * skipped.
+         */
+        'enabled' => env('DOCS_FILES_ENABLED', true),
+
+        'paths' => [
+            'README.md',
+            'CHANGELOG.md',
+            'NEWS.md',
         ],
     ],
 
