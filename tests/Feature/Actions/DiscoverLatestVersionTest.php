@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Foxws\Docs\Actions\DiscoverLatestVersion;
 use Foxws\Docs\Models\Project;
 use Foxws\Docs\Models\Version;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 
 it('registers the latest release as the default version', function () {
@@ -166,4 +168,23 @@ it('does nothing when the repository has no releases', function () {
 
     expect($version)->toBeNull();
     $this->assertDatabaseCount('versions', 0);
+});
+
+it('reports a failed lookup and keeps the registered versions', function () {
+    config()->set('docs.sync.auto_discover_versions', true);
+
+    $project = Project::factory()->create(['github_repository' => 'foxws/example']);
+    $version = Version::factory()->create(['project_id' => $project->id, 'is_default' => true]);
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/releases/latest' => Http::response(['message' => 'Forbidden'], 403),
+    ]);
+
+    Exceptions::fake();
+
+    expect(app(DiscoverLatestVersion::class)->handle($project))->toBeNull()
+        ->and($version->refresh()->is_default)->toBeTrue();
+
+    $this->assertDatabaseCount('versions', 1);
+    Exceptions::assertReported(RequestException::class);
 });

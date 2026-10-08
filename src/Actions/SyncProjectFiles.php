@@ -7,7 +7,7 @@ namespace Foxws\Docs\Actions;
 use Foxws\Docs\Enums\DocumentType;
 use Foxws\Docs\Models\Project;
 use Foxws\Docs\Support\DocsClientResolver;
-use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\HttpClientException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Str;
@@ -40,7 +40,7 @@ final class SyncProjectFiles
 
         try {
             $tree = $client->fetchTree($project->sourceLocation(), $ref);
-        } catch (RequestException|RuntimeException $e) {
+        } catch (HttpClientException|RuntimeException $e) {
             report($e);
 
             return;
@@ -57,7 +57,7 @@ final class SyncProjectFiles
             ->each(function (array $entry) use ($client, $project, $ref): void {
                 try {
                     $content = $client->fetchRawContent($project->sourceLocation(), $ref, $entry['path']);
-                } catch (RequestException|RuntimeException $e) {
+                } catch (HttpClientException|RuntimeException $e) {
                     report($e);
 
                     return;

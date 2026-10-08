@@ -16,8 +16,10 @@ use Foxws\Docs\Models\Project;
 use Foxws\Docs\Models\Version;
 use Illuminate\Console\Command;
 use Illuminate\Console\View\TaskResult;
+use Illuminate\Http\Client\HttpClientException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
+use RuntimeException;
 
 class SyncDocsCommand extends Command
 {
@@ -55,17 +57,21 @@ class SyncDocsCommand extends Command
             return $this->queueSync($slugs);
         }
 
+        $synced = true;
+
         if ($project) {
-            $this->syncProject($project, $syncVersionDocuments, $discoverLatestVersion, $pruneOldVersions, $syncProjectFiles);
+            $synced = $this->syncProject($project, $syncVersionDocuments, $discoverLatestVersion, $pruneOldVersions, $syncProjectFiles);
         } else {
-            Project::eachRegistered(fn (Project $project) => $this->syncProject(
-                $project, $syncVersionDocuments, $discoverLatestVersion, $pruneOldVersions, $syncProjectFiles,
-            ));
+            Project::eachRegistered(function (Project $project) use (&$synced, $syncVersionDocuments, $discoverLatestVersion, $pruneOldVersions, $syncProjectFiles): void {
+                $synced = $this->syncProject(
+                    $project, $syncVersionDocuments, $discoverLatestVersion, $pruneOldVersions, $syncProjectFiles,
+                ) && $synced;
+            });
         }
 
         Document::syncSearchIndex();
 
-        return self::SUCCESS;
+        return $synced ? self::SUCCESS : self::FAILURE;
     }
 
     private function syncProject(
@@ -74,26 +80,37 @@ class SyncDocsCommand extends Command
         DiscoverLatestVersion $discoverLatestVersion,
         PruneOldVersions $pruneOldVersions,
         SyncProjectFiles $syncProjectFiles,
-    ): void {
+    ): bool {
+        $synced = true;
+
         $discoverLatestVersion->handle($project);
         $pruneOldVersions->handle($project);
 
-        $project->versions->each(function (Version $version) use ($project, $syncVersionDocuments) {
+        // A version that fails to sync is reported and retried on the next
+        // run; the others still sync, and the command fails at the end.
+        $project->versions->each(function (Version $version) use ($project, $syncVersionDocuments, &$synced) {
             $this->components->task(
                 "{$project->slug}@{$version->name}",
-                function () use ($syncVersionDocuments, $version) {
+                function () use ($syncVersionDocuments, $version, &$synced) {
                     try {
                         $syncVersionDocuments->handle($version);
                     } catch (EmptySourceTreeException $e) {
                         report($e);
 
                         return TaskResult::Skipped->value;
+                    } catch (HttpClientException|RuntimeException $e) {
+                        report($e);
+                        $synced = false;
+
+                        return TaskResult::Failure->value;
                     }
                 },
             );
         });
 
         $syncProjectFiles->handle($project);
+
+        return $synced;
     }
 
     /**

@@ -8,15 +8,16 @@ use Foxws\Docs\Actions\DiscoverLatestVersion;
 use Foxws\Docs\Actions\PruneOldVersions;
 use Foxws\Docs\Actions\SyncProjectFiles;
 use Foxws\Docs\Actions\SyncVersionDocuments;
-use Foxws\Docs\Exceptions\EmptySourceTreeException;
 use Foxws\Docs\Models\Project;
 use Foxws\Docs\Models\Version;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Http\Client\HttpClientException;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
+use RuntimeException;
 
 final class SyncProjectDocuments implements ShouldQueue
 {
@@ -59,10 +60,12 @@ final class SyncProjectDocuments implements ShouldQueue
         $discoverLatestVersion->handle($project);
         $pruneOldVersions->handle($project);
 
+        // A version that fails to sync is reported and retried on the next
+        // run, without failing the job: that would cancel the rest of the chain.
         $project->versions->each(function (Version $version) use ($syncVersionDocuments) {
             try {
                 $syncVersionDocuments->handle($version);
-            } catch (EmptySourceTreeException $e) {
+            } catch (HttpClientException|RuntimeException $e) {
                 report($e);
             }
         });

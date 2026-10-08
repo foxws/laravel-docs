@@ -7,6 +7,7 @@ use Foxws\Docs\Jobs\SyncProjectDocuments;
 use Foxws\Docs\Models\Document;
 use Foxws\Docs\Models\Project;
 use Foxws\Docs\Models\Version;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
@@ -59,6 +60,25 @@ it('reports and continues instead of failing the job when a version\'s raw git t
     expect($version->last_synced_at)->toBeNull();
 
     Exceptions::assertReported(EmptySourceTreeException::class);
+});
+
+it('reports a version that fails to sync instead of failing the job, so the chain carries on', function () {
+    config()->set('docs.github.retry.times', 1);
+
+    $project = Project::factory()->create(['slug' => 'example', 'github_repository' => 'foxws/example']);
+    $version = Version::factory()->create(['project_id' => $project->id, 'ref' => 'main']);
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/main*' => Http::response(['message' => 'Forbidden'], 403),
+    ]);
+
+    Exceptions::fake();
+
+    $this->app->call([new SyncProjectDocuments('example'), 'handle']);
+
+    expect($version->refresh()->last_synced_at)->toBeNull();
+
+    Exceptions::assertReported(RequestException::class);
 });
 
 it('no-ops when the project slug no longer resolves to a registered project', function () {
