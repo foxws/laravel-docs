@@ -2,6 +2,17 @@
 
 All notable changes to `laravel-docs` will be documented in this file.
 
+## v1.8.2 - 2026-10-14
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+### What's Changed
+
+#### Other Changes
+
+* Add Laravel Boost tip to README and docs by @francoism90 in https://github.com/foxws/laravel-docs/pull/36
+
+**Full Changelog**: https://github.com/foxws/laravel-docs/compare/v1.8.1...v1.8.2
+
 ## v1.8.1 - 2026-10-08
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
