@@ -45,6 +45,16 @@ php artisan migrate
 > [!WARNING]
 > This package creates its own `projects`, `versions`, and `documents` tables via `loadMigrationsFrom()`. Don't add your own migrations for tables with these names — doing so will fail with a "relation already exists" error when both run. If you need custom columns, publish and edit these migrations instead (see above).
 
+> [!TIP]
+> Let your AI agent do the hard parts. This package ships a [Laravel Boost](https://laravel.com/docs/boost) skill, `docs-development`, that teaches your agent how to install, configure and use Laravel Docs. Install Boost and select the skill when prompted:
+>
+> ```bash
+> composer require laravel/boost --dev
+> php artisan boost:install
+> ```
+>
+> Already using Boost? Run `php artisan boost:update --discover` to pick up the skill. Then just ask, for example: *"Register foxws/laravel-ddd as a project and sync its docs every day."*
+
 ## Usage
 
 Register a project and at least one version, then sync its documentation from GitHub:
