@@ -11,6 +11,7 @@ use Foxws\Docs\Support\MarkdownDocumentParser;
 use Foxws\Docs\Support\TextNormalizer;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -280,6 +281,27 @@ class Document extends Model implements Htmlable
     public static function firstBySlug(BaseCollection $documents, string $slug): ?self
     {
         return $documents->firstWhere('slug', $slug);
+    }
+
+    /**
+     * Delete the given documents, removing them from the search index in a
+     * single batch rather than once per document through Scout's observer
+     * — one engine request instead of one per deleted document. Model
+     * events still fire for each delete.
+     *
+     * @param  Collection<int, Document>  $documents
+     */
+    public static function deleteMany(Collection $documents): void
+    {
+        if ($documents->isEmpty()) {
+            return;
+        }
+
+        $documents->first()->queueRemoveFromSearch($documents);
+
+        static::modelClass()::withoutSyncingToSearch(
+            fn () => $documents->each(fn (Document $document) => $document->delete()),
+        );
     }
 
     /**

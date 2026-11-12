@@ -176,3 +176,24 @@ it('reads the files of a local project from disk', function () {
 
     Http::assertNothingSent();
 });
+
+it('keeps stored files missing from a truncated tree', function () {
+    $project = Project::factory()->create(['github_repository' => 'foxws/example']);
+    $project->files()->create([
+        'type' => DocumentType::File,
+        'slug' => 'news',
+        'title' => 'News',
+        'body' => 'still here',
+        'source_path' => 'NEWS.md',
+        'blob_sha' => 'news-sha',
+        'searchable' => false,
+    ]);
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/HEAD*' => Http::response([...fakeRootTree([]), 'truncated' => true]),
+    ]);
+
+    app(SyncProjectFiles::class)->handle($project);
+
+    expect($project->file('NEWS.md'))->not->toBeNull();
+});

@@ -21,7 +21,7 @@ final class GitHubDocsClient implements DocsClient
      * Retried with backoff (see fetchRawContent()'s note on why) — a ref
      * that was only just pushed/tagged can briefly 404 here too.
      *
-     * @return array{sha: string, tree: array<int, array{path: string, sha: string, type: string}>}
+     * @return array{sha: string, tree: array<int, array{path: string, sha: string, type: string}>, truncated?: bool}
      */
     public function fetchTree(string $repository, string $ref): array
     {
@@ -50,9 +50,19 @@ final class GitHubDocsClient implements DocsClient
     public function fetchRawContent(string $repository, string $ref, string $path): string
     {
         return Http::retry(config('docs.github.retry.times'), config('docs.github.retry.sleep_milliseconds'))
-            ->get("https://raw.githubusercontent.com/{$repository}/{$ref}/{$path}")
+            ->get("https://raw.githubusercontent.com/{$repository}/{$ref}/{$this->encodePath($path)}")
             ->throw()
             ->body();
+    }
+
+    /**
+     * Percent-encode each segment of a repository path, so a file name with
+     * a space, `#` or `?` still resolves instead of being cut off as a
+     * fragment or query string.
+     */
+    private function encodePath(string $path): string
+    {
+        return implode('/', array_map(rawurlencode(...), explode('/', $path)));
     }
 
     /**

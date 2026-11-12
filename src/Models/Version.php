@@ -149,7 +149,11 @@ class Version extends Model
      */
     public function markAsDefault(): static
     {
-        static::query()->where('project_id', $this->project_id)->update(['is_default' => false]);
+        static::query()
+            ->where('project_id', $this->project_id)
+            ->whereKeyNot($this->getKey())
+            ->where('is_default', true)
+            ->update(['is_default' => false]);
 
         $this->update(['is_default' => true]);
 

@@ -389,3 +389,59 @@ it('stores each project root file', function () {
 
     expect(Project::query()->firstOrFail()->file('README.md')?->body)->toBe('Intro.');
 });
+
+it('does not prune documents missing from a truncated git tree', function () {
+    $version = fakeVersion();
+    $version->documents()->create([
+        'slug' => 'installation',
+        'title' => 'Installation',
+        'body' => 'still here',
+        'source_path' => 'docs/installation.md',
+        'blob_sha' => 'installation-sha',
+    ]);
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/main*' => Http::response([
+            ...fakeTreeResponse([]),
+            'truncated' => true,
+        ], 200),
+    ]);
+
+    $this->artisan('docs:sync')->assertSuccessful();
+
+    $this->assertDatabaseHas('documents', ['source_path' => 'docs/installation.md']);
+});
+
+it('casts non-string front matter values instead of failing the sync', function () {
+    fakeVersion();
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/main*' => Http::response(fakeTreeResponse([
+            ['path' => 'docs/releases.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-a', 'size' => 512, 'url' => '...'],
+        ]), 200),
+        'raw.githubusercontent.com/foxws/example/main/docs/releases.md' => Http::response("---\ntitle: 2024\nsection: [a, b]\norder: first\nseo: none\n---\n\n# Releases", 200),
+    ]);
+
+    $this->artisan('docs:sync')->assertSuccessful();
+
+    $document = Document::query()->where('source_path', 'docs/releases.md')->firstOrFail();
+    expect($document->title)->toBe('2024');
+    expect($document->section)->toBeNull();
+    expect($document->order)->toBe(0);
+    expect($document->seo)->toBeNull();
+});
+
+it('percent-encodes each path segment when fetching raw content', function () {
+    fakeVersion();
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/main*' => Http::response(fakeTreeResponse([
+            ['path' => 'docs/what is #new.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-a', 'size' => 512, 'url' => '...'],
+        ]), 200),
+        'raw.githubusercontent.com/foxws/example/main/docs/what%20is%20%23new.md' => Http::response('# New', 200),
+    ]);
+
+    $this->artisan('docs:sync')->assertSuccessful();
+
+    $this->assertDatabaseHas('documents', ['source_path' => 'docs/what is #new.md', 'body' => '# New']);
+});

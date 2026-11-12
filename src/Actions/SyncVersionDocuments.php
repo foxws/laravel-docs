@@ -49,7 +49,13 @@ final class SyncVersionDocuments
 
         $entries = $client->filterDocEntries($tree['tree'], $project->docs_path);
 
-        $this->pruneMissing($version, $entries->pluck('path'));
+        // A truncated tree (GitHub caps very large recursive listings) is
+        // missing entries that still exist at the source — don't prune
+        // documents just because they fell outside the listing.
+        if (! ($tree['truncated'] ?? false)) {
+            $this->pruneMissing($version, $entries->pluck('path'));
+        }
+
         $this->upsertChanged($version, $client, $entries);
 
         $version->update([
@@ -67,13 +73,9 @@ final class SyncVersionDocuments
             return;
         }
 
-        $version->documents()
-            ->whereNotIn('source_path', $remotePaths)
-            ->get()
-            ->each(function (Document $document) {
-                $document->unsearchable();
-                $document->delete();
-            });
+        Document::deleteMany(
+            $version->documents()->whereNotIn('source_path', $remotePaths)->get(),
+        );
     }
 
     /**
@@ -83,11 +85,10 @@ final class SyncVersionDocuments
     {
         $project = $version->project;
         $indexPath = $project->indexDocumentPath();
+        $storedShas = $version->documents()->pluck('blob_sha', 'source_path');
 
         foreach ($entries as $entry) {
-            $existing = $version->documents()->firstWhere('source_path', $entry['path']);
-
-            if ($existing?->blob_sha === $entry['sha']) {
+            if ($storedShas->get($entry['path']) === $entry['sha']) {
                 continue;
             }
 
@@ -95,36 +96,60 @@ final class SyncVersionDocuments
             $parsed = $this->parser->parse($raw);
             $stem = Str::of($entry['path'])->afterLast('/')->beforeLast('.md');
 
-            // A YAML folded/literal scalar in front matter can carry stray
-            // newlines or runs of spaces — squish before it's stored, so
-            // every downstream consumer (page <title>, nav, breadcrumbs,
-            // search index) sees clean text without normalizing it itself.
-            $title = filled($parsed->frontMatter['title'] ?? null)
-                ? TextNormalizer::normalize($parsed->frontMatter['title'])
-                : $stem->headline()->toString();
-
-            $section = filled($parsed->frontMatter['section'] ?? null)
-                ? TextNormalizer::normalize($parsed->frontMatter['section'])
-                : null;
+            $frontMatter = $parsed->frontMatter;
 
             $version->documents()->updateOrCreate(
                 ['source_path' => $entry['path']],
                 [
-                    'slug' => $this->resolveSlug($parsed->frontMatter['slug'] ?? null, $stem->toString()),
-                    'title' => $title,
+                    'slug' => $this->resolveSlug($frontMatter['slug'] ?? null, $stem->toString()),
+                    'title' => $this->frontMatterText($frontMatter, 'title') ?? $stem->headline()->toString(),
                     'body' => $parsed->markdown,
-                    'order' => $parsed->frontMatter['order'] ?? 0,
-                    'section' => $section,
+                    'order' => is_numeric($frontMatter['order'] ?? null) ? (int) $frontMatter['order'] : 0,
+                    'section' => $this->frontMatterText($frontMatter, 'section'),
                     'blob_sha' => $entry['sha'],
-                    'searchable' => $parsed->frontMatter['searchable'] ?? true,
-                    'seo' => $parsed->frontMatter['seo'] ?? null,
+                    'searchable' => $frontMatter['searchable'] ?? true,
+                    'seo' => $this->frontMatterArray($frontMatter, 'seo'),
                 ],
             );
 
             if ($entry['path'] === $indexPath) {
-                $project->update(['metadata' => $parsed->frontMatter['metadata'] ?? null]);
+                $project->update(['metadata' => $this->frontMatterArray($frontMatter, 'metadata')]);
             }
         }
+    }
+
+    /**
+     * A front matter value as clean text, or null if it's blank or not a
+     * scalar. YAML types bare values, so `title: 2024` arrives as an int —
+     * cast it rather than fail the sync. A folded/literal scalar can carry
+     * stray newlines or runs of spaces, so squish it before it's stored and
+     * every consumer (page <title>, nav, search index) sees clean text.
+     *
+     * @param  array<string, mixed>  $frontMatter
+     */
+    private function frontMatterText(array $frontMatter, string $key): ?string
+    {
+        $value = $frontMatter[$key] ?? null;
+
+        if (! is_scalar($value) || is_bool($value) || blank($value)) {
+            return null;
+        }
+
+        return TextNormalizer::normalize((string) $value);
+    }
+
+    /**
+     * A front matter mapping, or null if it's missing or not a mapping —
+     * a scalar would be stored fine but break the AsArrayObject cast on read.
+     *
+     * @param  array<string, mixed>  $frontMatter
+     * @return array<array-key, mixed>|null
+     */
+    private function frontMatterArray(array $frontMatter, string $key): ?array
+    {
+        $value = $frontMatter[$key] ?? null;
+
+        return is_array($value) ? $value : null;
     }
 
     /**

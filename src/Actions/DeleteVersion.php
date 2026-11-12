@@ -17,10 +17,7 @@ final class DeleteVersion
      */
     public function handle(Version $version): void
     {
-        $version->documents->each(function (Document $document) {
-            $document->unsearchable();
-            $document->delete();
-        });
+        Document::deleteMany($version->documents);
 
         $version->delete();
 
