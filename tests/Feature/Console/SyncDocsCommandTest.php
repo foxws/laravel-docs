@@ -445,3 +445,83 @@ it('percent-encodes each path segment when fetching raw content', function () {
 
     $this->assertDatabaseHas('documents', ['source_path' => 'docs/what is #new.md', 'body' => '# New']);
 });
+
+it('gives a file whose slug is already taken in its version a path-derived slug', function () {
+    fakeVersion();
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/main*' => Http::response(fakeTreeResponse([
+            ['path' => 'docs/guides/intro.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-a', 'size' => 512, 'url' => '...'],
+            ['path' => 'docs/intro.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-b', 'size' => 512, 'url' => '...'],
+            ['path' => 'docs/reference/intro.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-c', 'size' => 512, 'url' => '...'],
+            ['path' => 'docs/start.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-d', 'size' => 512, 'url' => '...'],
+            ['path' => 'docs/x/guides/intro.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-e', 'size' => 512, 'url' => '...'],
+            ['path' => 'docs/x/guides-intro.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-f', 'size' => 512, 'url' => '...'],
+        ]), 200),
+        'raw.githubusercontent.com/foxws/example/main/docs/x/guides/intro.md' => Http::response("---\nslug: guides-intro\n---\n\n# Clash", 200),
+        'raw.githubusercontent.com/foxws/example/main/docs/x/guides-intro.md' => Http::response("---\nslug: guides-intro\n---\n\n# Clash", 200),
+        'raw.githubusercontent.com/foxws/example/main/docs/guides/intro.md' => Http::response('# Guides', 200),
+        'raw.githubusercontent.com/foxws/example/main/docs/intro.md' => Http::response('# Intro', 200),
+        'raw.githubusercontent.com/foxws/example/main/docs/reference/intro.md' => Http::response('# Reference', 200),
+        'raw.githubusercontent.com/foxws/example/main/docs/start.md' => Http::response("---\nslug: intro\n---\n\n# Start", 200),
+    ]);
+
+    $this->artisan('docs:sync')->assertSuccessful();
+
+    expect(Document::query()->pluck('slug', 'source_path')->all())->toEqual([
+        'docs/guides/intro.md' => 'guides-intro',
+        'docs/intro.md' => 'intro',
+        'docs/reference/intro.md' => 'reference-intro',
+        'docs/start.md' => 'start',
+        'docs/x/guides-intro.md' => 'x-guides-intro',
+        'docs/x/guides/intro.md' => 'x-guides-intro-2',
+    ]);
+});
+
+it('keeps the slug of an unchanged document when another file claims it', function () {
+    $version = fakeVersion();
+    $version->documents()->create([
+        'slug' => 'intro',
+        'title' => 'Intro',
+        'body' => '# Intro',
+        'source_path' => 'docs/intro.md',
+        'blob_sha' => 'intro-sha',
+    ]);
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/main*' => Http::response(fakeTreeResponse([
+            ['path' => 'docs/guides/intro.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-a', 'size' => 512, 'url' => '...'],
+            ['path' => 'docs/intro.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'intro-sha', 'size' => 512, 'url' => '...'],
+        ]), 200),
+        'raw.githubusercontent.com/foxws/example/main/docs/guides/intro.md' => Http::response('# Guides', 200),
+    ]);
+
+    $this->artisan('docs:sync')->assertSuccessful();
+
+    expect(Document::query()->pluck('slug', 'source_path')->all())->toEqual([
+        'docs/intro.md' => 'intro',
+        'docs/guides/intro.md' => 'guides-intro',
+    ]);
+});
+
+it('reads a front matter searchable flag written as a word', function (string $value, bool $expected) {
+    fakeVersion();
+
+    Http::fake([
+        'api.github.com/repos/foxws/example/git/trees/main*' => Http::response(fakeTreeResponse([
+            ['path' => 'docs/internal.md', 'mode' => '100644', 'type' => 'blob', 'sha' => 'blob-sha-a', 'size' => 512, 'url' => '...'],
+        ]), 200),
+        'raw.githubusercontent.com/foxws/example/main/docs/internal.md' => Http::response("---\nsearchable: {$value}\n---\n\n# Internal", 200),
+    ]);
+
+    $this->artisan('docs:sync')->assertSuccessful();
+
+    expect(Document::query()->firstOrFail()->searchable)->toBe($expected);
+})->with([
+    ['no', false],
+    ['off', false],
+    ['"false"', false],
+    ['0', false],
+    ['yes', true],
+    ['nonsense', true],
+]);
