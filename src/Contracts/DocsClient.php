@@ -18,7 +18,7 @@ interface DocsClient
      * Fetch every file under $repository at $ref as a flat tree, so
      * filterDocEntries() can narrow it down to markdown files.
      *
-     * @return array{sha: string, tree: array<int, array{path: string, sha: string, type: string}>}
+     * @return array{sha: string, tree: array<int, array{path: string, sha: string, type: string}>, truncated?: bool}
      */
     public function fetchTree(string $repository, string $ref): array;
 

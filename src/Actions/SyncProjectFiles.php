@@ -48,7 +48,10 @@ final class SyncProjectFiles
 
         $entries = $this->matchingEntries($tree['tree'], $paths);
 
-        $project->files()->whereNotIn('source_path', $entries->pluck('path'))->delete();
+        // A truncated tree may be missing files that still exist at the source.
+        if (! ($tree['truncated'] ?? false)) {
+            $project->files()->whereNotIn('source_path', $entries->pluck('path'))->delete();
+        }
 
         $stored = $project->files()->pluck('blob_sha', 'source_path');
 
