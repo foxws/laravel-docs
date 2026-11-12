@@ -85,7 +85,16 @@ final class SyncVersionDocuments
     {
         $project = $version->project;
         $indexPath = $project->indexDocumentPath();
-        $storedShas = $version->documents()->pluck('blob_sha', 'source_path');
+        $stored = $version->documents()->toBase()->get(['source_path', 'slug', 'blob_sha']);
+        $storedShas = $stored->pluck('blob_sha', 'source_path');
+        $slugOwners = $stored->pluck('source_path', 'slug');
+
+        // Shallowest files first, so on a slug clash `docs/intro.md` keeps
+        // `intro` and `docs/guides/intro.md` is the one that falls back.
+        $entries = $entries->sortBy([
+            fn (array $a, array $b): int => substr_count($a['path'], '/') <=> substr_count($b['path'], '/'),
+            fn (array $a, array $b): int => $a['path'] <=> $b['path'],
+        ]);
 
         foreach ($entries as $entry) {
             if ($storedShas->get($entry['path']) === $entry['sha']) {
@@ -98,16 +107,23 @@ final class SyncVersionDocuments
 
             $frontMatter = $parsed->frontMatter;
 
+            $slug = $this->uniqueSlug(
+                $slugOwners,
+                $entry['path'],
+                $this->resolveSlug($frontMatter['slug'] ?? null, $stem->toString()),
+                $this->pathSlug($entry['path'], $project->docs_path),
+            );
+
             $version->documents()->updateOrCreate(
                 ['source_path' => $entry['path']],
                 [
-                    'slug' => $this->resolveSlug($frontMatter['slug'] ?? null, $stem->toString()),
+                    'slug' => $slug,
                     'title' => $this->frontMatterText($frontMatter, 'title') ?? $stem->headline()->toString(),
                     'body' => $parsed->markdown,
                     'order' => is_numeric($frontMatter['order'] ?? null) ? (int) $frontMatter['order'] : 0,
                     'section' => $this->frontMatterText($frontMatter, 'section'),
                     'blob_sha' => $entry['sha'],
-                    'searchable' => $frontMatter['searchable'] ?? true,
+                    'searchable' => $this->frontMatterBoolean($frontMatter, 'searchable') ?? true,
                     'seo' => $this->frontMatterArray($frontMatter, 'seo'),
                 ],
             );
@@ -139,6 +155,24 @@ final class SyncVersionDocuments
     }
 
     /**
+     * A front matter flag, or null if it's missing or unrecognised. YAML 1.2
+     * only types `true`/`false` as booleans, so `searchable: no` arrives as
+     * the string "no" — which a plain boolean cast would store as true.
+     *
+     * @param  array<string, mixed>  $frontMatter
+     */
+    private function frontMatterBoolean(array $frontMatter, string $key): ?bool
+    {
+        $value = $frontMatter[$key] ?? null;
+
+        if (! is_scalar($value)) {
+            return null;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+    }
+
+    /**
      * A front matter mapping, or null if it's missing or not a mapping —
      * a scalar would be stored fine but break the AsArrayObject cast on read.
      *
@@ -150,6 +184,50 @@ final class SyncVersionDocuments
         $value = $frontMatter[$key] ?? null;
 
         return is_array($value) ? $value : null;
+    }
+
+    /**
+     * $slug, unless another file of this version already holds it — two
+     * `intro.md` files in different subfolders would otherwise both claim
+     * `intro` and fail the version's sync on the unique index every run.
+     * The later file falls back to its path-derived slug ($fallback), then
+     * to that with a numeric suffix. $slugOwners (slug => source path) is
+     * updated to reflect the slug handed out.
+     *
+     * @param  Collection<string, string>  $slugOwners
+     */
+    private function uniqueSlug(Collection $slugOwners, string $path, string $slug, string $fallback): string
+    {
+        $isTaken = fn (string $candidate): bool => ! in_array($slugOwners->get($candidate), [null, $path], true);
+
+        $candidate = $isTaken($slug) ? $fallback : $slug;
+
+        for ($suffix = 2; $isTaken($candidate); $suffix++) {
+            $candidate = "{$fallback}-{$suffix}";
+        }
+
+        $previous = $slugOwners->search($path, strict: true);
+
+        if ($previous !== false) {
+            $slugOwners->forget($previous);
+        }
+
+        $slugOwners->put($candidate, $path);
+
+        return $candidate;
+    }
+
+    /**
+     * A slug from the file's path within the docs folder, e.g.
+     * `docs/guides/intro.md` becomes `guides-intro`.
+     */
+    private function pathSlug(string $path, string $docsPath): string
+    {
+        return Str::of($path)
+            ->after(Str::finish($docsPath, '/'))
+            ->beforeLast('.md')
+            ->replace('/', '-')
+            ->toString();
     }
 
     /**

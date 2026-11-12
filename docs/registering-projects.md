@@ -195,7 +195,14 @@ seo:
 ```
 
 All fields are optional. `slug`/`title` fall back to the file's name when
-omitted; `order` defaults to `0`; `searchable` defaults to `true`.
+omitted; `order` defaults to `0`; `searchable` defaults to `true`, and also
+accepts `no`/`off`/`0` (or `yes`/`on`/`1`).
+
+A slug is unique within a version. When two files would get the same one —
+say `docs/intro.md` and `docs/guides/intro.md` — the shallower file keeps
+it, and the other falls back to its path within the docs folder
+(`guides-intro`), with a numeric suffix (`guides-intro-2`) if that is taken
+too. A document that's already synced keeps its slug.
 
 A `slug` is stored without leading or trailing slashes, so the same files
 can also feed a static site generator: `slug: /intro` is stored as `intro`,
