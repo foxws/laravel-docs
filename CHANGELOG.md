@@ -2,6 +2,19 @@
 
 All notable changes to `laravel-docs` will be documented in this file.
 
+## v2.0.0 - 2026-11-19
+
+This release requires PHP 8.5 or newer and Laravel 13. PHP 8.4 and Laravel 12 are no longer supported, and PHP 8.6 is now tested in CI. Stay on the previous major version if you still run PHP 8.4 or Laravel 12.
+
+<!-- Release notes generated using configuration in .github/release.yml at a959b58f187c1931a253da37742ccee78f80a4cc -->
+### What's Changed
+
+#### Other Changes
+
+* Drop PHP 8.4 and add PHP 8.6 by @francoism90 in https://github.com/foxws/laravel-docs/pull/39
+
+**Full Changelog**: https://github.com/foxws/laravel-docs/compare/v1.9.0...v2.0.0
+
 ## v1.9.0 - 2026-11-12
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
