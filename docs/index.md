@@ -5,7 +5,7 @@ metadata:
   group: foundations
   eyebrow: "Data layer · Markdown · GitHub"
   desc: "Pull a package's docs/*.md folder from GitHub into queryable Eloquent models."
-  requires: "PHP ^8.3"
+  requires: "PHP ^8.5"
   laravel: "12.x / 13.x"
   licence: MIT
 ---
