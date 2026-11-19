@@ -243,7 +243,7 @@ title: Introduction
 metadata:
   role: Containers
   eyebrow: "Containers · Rootless · Laravel 11"
-  requires: "PHP ^8.3"
+  requires: "PHP ^8.5"
   laravel: "11.x"
   runtime: "Podman 5"
   licence: MIT
