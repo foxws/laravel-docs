@@ -44,6 +44,9 @@ identically either way). `--github` becomes optional and is cleared
 when `--driver=local`; switching a project from `local` back to `github`
 (or vice versa) is just re-running `docs:projects:add` with the other driver.
 
+Symlinks inside that folder aren't followed or synced, as they could point at
+any file the app can read. The base path itself may be a symlink.
+
 Local projects skip [automatic version discovery](#automatic-version-discovery)
 entirely — a folder has no releases to discover — so register at least one
 version for it explicitly, same as any other project. `ref` is unused for a
