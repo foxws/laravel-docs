@@ -62,7 +62,13 @@ final class LocalDocsClient implements DocsClient
 
     public function fetchRawContent(string $repository, string $ref, string $path): string
     {
-        $file = $this->resolveBasePath($repository).'/'.$this->normalizer->normalizePath($path);
+        $base = $this->resolveBasePath($repository);
+        $file = $base.'/'.$this->normalizer->normalizePath($path);
+
+        if (is_link($file) || ! $this->isInside($base, $file)) {
+            throw new RuntimeException("Refusing to read [{$file}]: it's a symlink, missing, or outside [{$base}].");
+        }
+
         $contents = file_get_contents($file);
 
         if ($contents === false) {
@@ -101,6 +107,22 @@ final class LocalDocsClient implements DocsClient
     }
 
     /**
+     * Compared as real paths, so a linked folder or junction can't lead outside,
+     * while the base path itself may be a symlink.
+     */
+    private function isInside(string $base, string $path): bool
+    {
+        $realBase = realpath($base);
+        $realPath = realpath($path);
+
+        if ($realBase === false || $realPath === false) {
+            return false;
+        }
+
+        return str_starts_with($realPath, rtrim($realBase, '/\\').DIRECTORY_SEPARATOR);
+    }
+
+    /**
      * @return iterable<SplFileInfo>
      */
     private function files(string $base): iterable
@@ -114,7 +136,8 @@ final class LocalDocsClient implements DocsClient
         );
 
         foreach ($iterator as $file) {
-            if ($file->isFile()) {
+            // Symlinks are skipped: whoever can write to the docs could point one at .env.
+            if ($file->isFile() && ! $file->isLink() && $this->isInside($base, $file->getPathname())) {
                 yield $file;
             }
         }

@@ -112,3 +112,61 @@ it('returns an empty tree for a repository that does not exist', function () {
 
     expect($tree['tree'])->toBe([]);
 });
+
+it('leaves symlinked files out of the tree', function (string $target) {
+    withLocalDocsFixture(function (string $base) use ($target) {
+        $outside = "{$base}-outside";
+
+        File::put($outside, 'SECRET=value');
+
+        try {
+            symlink($target === 'outside' ? $outside : "{$base}/README.md", "{$base}/docs/linked.md");
+
+            $tree = (new LocalDocsClient)->fetchTree($base, 'unused');
+
+            expect(collect($tree['tree'])->pluck('path')->all())
+                ->toBe(['README.md', 'docs/installation.md', 'docs/usage.md']);
+        } finally {
+            File::delete($outside);
+        }
+    });
+})->with(['outside', 'inside'])->skipOnWindows();
+
+it('refuses to read through a symlink', function (string $path) {
+    withLocalDocsFixture(function (string $base) use ($path) {
+        $outside = "{$base}-outside";
+
+        File::ensureDirectoryExists($outside);
+        File::put("{$outside}/secret.md", 'SECRET=value');
+
+        try {
+            symlink("{$outside}/secret.md", "{$base}/docs/file.md");
+            symlink($outside, "{$base}/docs/folder");
+
+            expect(fn () => (new LocalDocsClient)->fetchRawContent($base, 'unused', $path))
+                ->toThrow(RuntimeException::class, 'outside');
+        } finally {
+            File::deleteDirectory($outside);
+        }
+    });
+})->with([
+    'a linked file' => 'docs/file.md',
+    'a file in a linked folder' => 'docs/folder/secret.md',
+])->skipOnWindows();
+
+it('reads docs from a base path that is itself a symlink', function () {
+    withLocalDocsFixture(function (string $base) {
+        $link = "{$base}-link";
+
+        symlink($base, $link);
+
+        try {
+            $client = new LocalDocsClient;
+
+            expect($client->fetchTree($link, 'unused')['tree'])->toHaveCount(3)
+                ->and($client->fetchRawContent($link, 'unused', 'docs/usage.md'))->toBe('# Usage');
+        } finally {
+            unlink($link);
+        }
+    });
+})->skipOnWindows();
