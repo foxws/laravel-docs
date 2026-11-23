@@ -2,6 +2,22 @@
 
 All notable changes to `laravel-docs` will be documented in this file.
 
+## v2.0.1 - 2026-11-23
+
+- The `local` driver skips symlinked files, and only reads files whose real path is inside the project's base path. The base path itself may still be a symlink.
+
+**Upgrading:** symlinked docs are no longer synced, and the next `docs:sync` removes the ones synced before. The `github` driver is unchanged.
+
+<!-- Release notes generated using configuration in .github/release.yml at 926fc6de7848c6f345db15fd7d35e29cef9bf683 -->
+### What's Changed
+
+#### Other Changes
+
+* Harden the workflows by @francoism90 in https://github.com/foxws/laravel-docs/pull/40
+* Keep the local driver inside its base path by @francoism90 in https://github.com/foxws/laravel-docs/pull/41
+
+**Full Changelog**: https://github.com/foxws/laravel-docs/compare/v2.0.0...v2.0.1
+
 ## v2.0.0 - 2026-11-19
 
 This release requires PHP 8.5 or newer and Laravel 13. PHP 8.4 and Laravel 12 are no longer supported, and PHP 8.6 is now tested in CI. Stay on the previous major version if you still run PHP 8.4 or Laravel 12.
